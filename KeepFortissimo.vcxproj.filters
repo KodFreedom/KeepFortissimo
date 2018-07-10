@@ -13,5 +13,42 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Utilities">
+      <UniqueIdentifier>{fc4dce75-3b5d-49a6-9348-ac9f7c4dd1d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Utilities">
+      <UniqueIdentifier>{7075b0e2-cb67-477d-a038-3196e6e2ff29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Systems">
+      <UniqueIdentifier>{d8e58da6-a89a-4503-9a3f-900478cc92cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Systems">
+      <UniqueIdentifier>{df7cf32d-25bd-4e24-80c1-41c8aee05f1e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SourceCodes\main.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\main_system.cpp">
+      <Filter>ソース ファイル\Systems</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SourceCodes\Utilities\kf_utilities.h">
+      <Filter>ヘッダー ファイル\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Utilities\kf_labels.h">
+      <Filter>ヘッダー ファイル\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Utilities\singleton.h">
+      <Filter>ヘッダー ファイル\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\main_system.h">
+      <Filter>ヘッダー ファイル\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\system_setting.h">
+      <Filter>ヘッダー ファイル\Systems</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
