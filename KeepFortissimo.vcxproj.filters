@@ -33,6 +33,9 @@
     <ClCompile Include="SourceCodes\Systems\main_system.cpp">
       <Filter>ソース ファイル\Systems</Filter>
     </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\game_timer.cpp">
+      <Filter>ソース ファイル\Systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SourceCodes\Utilities\kf_utilities.h">
@@ -48,6 +51,9 @@
       <Filter>ヘッダー ファイル\Systems</Filter>
     </ClInclude>
     <ClInclude Include="SourceCodes\Systems\system_setting.h">
+      <Filter>ヘッダー ファイル\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\game_timer.h">
       <Filter>ヘッダー ファイル\Systems</Filter>
     </ClInclude>
   </ItemGroup>

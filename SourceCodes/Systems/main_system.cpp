@@ -8,6 +8,7 @@
 //  Email  : kodfreedom@gmail.com
 //--------------------------------------------------------------------------------
 #include "main_system.h"
+#include "game_timer.h"
 using namespace KeepFortissimo;
 
 //--------------------------------------------------------------------------------
@@ -48,6 +49,12 @@ MainSystem::~MainSystem()
 bool MainSystem::Initialize()
 {
     GetSystemLanguage();
+    
+    if (!GameTimer::StartUp())
+    {
+        return false;
+    }
+
     return true;
 }
 

@@ -27,6 +27,7 @@ int WINAPI WinMain(HINSTANCE instance_handle, HINSTANCE previous_instance_handle
     {
         if (!MainSystem::StartUp(instance_handle))
         {
+            MainSystem::ShutDown();
             return 0;
         }
 
