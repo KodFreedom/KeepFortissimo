@@ -47,10 +47,32 @@ MainSystem::~MainSystem()
 
 bool MainSystem::Initialize()
 {
+    GetSystemLanguage();
     return true;
 }
 
 void MainSystem::Uninitialize()
 {
 
+}
+
+void MainSystem::GetSystemLanguage()
+{
+    LANGID os_language = GetUserDefaultUILanguage();
+
+    switch (os_language)
+    {
+    case 0x0411:
+        // Japanese
+        current_language_ = kJapanese;
+        break;
+    case 0x0004:
+        // Chinese Symple
+        current_language_ = kChinese;
+        break;
+    default:
+        // English
+        current_language_ = kEnglish;
+        break;
+    }
 }
