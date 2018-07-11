@@ -38,11 +38,12 @@ void RenderSystem::SetMsaaEnable(bool value)
 //--------------------------------------------------------------------------------
 //  RenderSystem
 //--------------------------------------------------------------------------------
-RenderSystem::RenderSystem()
+RenderSystem::RenderSystem(const RenderApiType type)
     : Singleton<RenderSystem>()
     , msaa_enable_(true)
     , msaa_quality_(0)
     , background_color_(DirectX::Colors::Blue)
+    , api_type_(type)
 {
 }
 

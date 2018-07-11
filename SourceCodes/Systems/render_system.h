@@ -14,6 +14,11 @@
 
 namespace KeepFortissimo
 {
+    enum RenderApiType
+    {
+        kDirectX12,
+    };
+
     class RenderSystem : public Singleton<RenderSystem>
     {
         friend class Singleton<RenderSystem>;
@@ -85,7 +90,7 @@ namespace KeepFortissimo
         //  コンストラクタ
         //  构造函数
         //--------------------------------------------------------------------------------
-        RenderSystem();
+        RenderSystem(const RenderApiType type);
 
         //--------------------------------------------------------------------------------
         //  destructor
@@ -99,6 +104,7 @@ namespace KeepFortissimo
         //  コピーコンストラクタとオペレーターの削除
         //  删除复制用构造函数与等号
         //--------------------------------------------------------------------------------
+        RenderSystem() = delete;
         RenderSystem(RenderSystem const&) = delete;
         void operator=(RenderSystem const&) = delete;
 
@@ -133,14 +139,11 @@ namespace KeepFortissimo
         virtual void Uninitialize() override = 0;
 
         //--------------------------------------------------------------------------------
-        //  const variable / 定数 / 定量
-        //--------------------------------------------------------------------------------
-
-        //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
         //--------------------------------------------------------------------------------
-        bool              msaa_enable_;        // 4X MSAA enabled
-        UINT              msaa_quality_;      // quality level of 4X MSAA
+        bool              msaa_enable_;
+        UINT              msaa_quality_;
         DirectX::XMVECTOR background_color_;
+        RenderApiType     api_type_;
     };
 }
