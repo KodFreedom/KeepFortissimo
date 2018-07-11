@@ -301,7 +301,7 @@ bool MainSystem::InitializeWindow()
     window_class.hInstance = instance_handle_;
     window_class.hIcon = LoadIcon(0, IDI_APPLICATION);
     window_class.hCursor = LoadCursor(0, IDC_ARROW);
-    window_class.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
+    window_class.hbrBackground = static_cast<HBRUSH>(GetStockObject(NULL_BRUSH));
     window_class.lpszMenuName = 0;
     window_class.lpszClassName = kClassName;
 
@@ -312,10 +312,10 @@ bool MainSystem::InitializeWindow()
     }
 
     // Compute window rectangle dimensions based on requested client area dimensions.
-    RECT rect = { 0, 0, (LONG)width_, (LONG)height_ };
+    RECT rect = { 0, 0, static_cast<LONG>(width_), static_cast<LONG>(height_) };
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, false);
-    int width = rect.right - rect.left;
-    int height = rect.bottom - rect.top;
+    int width = static_cast<int>(rect.right - rect.left);
+    int height = static_cast<int>(rect.bottom - rect.top);
 
     main_window_handle_ = CreateWindow
     (

@@ -25,6 +25,18 @@
     <Filter Include="ソース ファイル\Systems">
       <UniqueIdentifier>{df7cf32d-25bd-4e24-80c1-41c8aee05f1e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Components">
+      <UniqueIdentifier>{9716a5da-e716-44a8-9cf9-78a8618dab15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Components">
+      <UniqueIdentifier>{524b9db5-46da-458d-bc48-1d552249ad12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Libraries">
+      <UniqueIdentifier>{2fd2105a-ce07-4738-a491-5eab8f545b73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Libraries\DirectXMath">
+      <UniqueIdentifier>{a28fbb7b-9656-4baa-9d41-da0ad4ee887e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SourceCodes\main.cpp">
@@ -34,6 +46,9 @@
       <Filter>ソース ファイル\Systems</Filter>
     </ClCompile>
     <ClCompile Include="SourceCodes\Systems\game_timer.cpp">
+      <Filter>ソース ファイル\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\render_system.cpp">
       <Filter>ソース ファイル\Systems</Filter>
     </ClCompile>
   </ItemGroup>
@@ -56,5 +71,40 @@
     <ClInclude Include="SourceCodes\Systems\game_timer.h">
       <Filter>ヘッダー ファイル\Systems</Filter>
     </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\render_system.h">
+      <Filter>ヘッダー ファイル\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXCollision.h">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXColors.h">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXMath.h">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXPackedVector.h">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXCollision.inl">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </None>
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathConvert.inl">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </None>
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathMatrix.inl">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </None>
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathMisc.inl">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </None>
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathVector.inl">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </None>
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXPackedVector.inl">
+      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </None>
   </ItemGroup>
 </Project>
