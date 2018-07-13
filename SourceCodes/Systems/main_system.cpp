@@ -10,6 +10,7 @@
 #include "main_system.h"
 #include "game_timer.h"
 #include "../Utilities/kf_labels.h"
+#include "render_system_directx12.h"
 using namespace KeepFortissimo;
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -237,7 +238,14 @@ MainSystem::~MainSystem()
 }
 
 //--------------------------------------------------------------------------------
-//  Initialize
+//  initialize the instance
+//  Return：true when succeeded, else false
+//ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+//  初期化処理
+//  戻り値：成功したらtrue、失敗したらfalse
+//ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+//  初始化
+//  返回值：成功则返回true、反之返回false
 //--------------------------------------------------------------------------------
 bool MainSystem::Initialize()
 {
@@ -253,19 +261,29 @@ bool MainSystem::Initialize()
         return false;
     }
 
+    if (!RenderSystemDirectX12::StartUp())
+    {
+        return false;
+    }
+
     return true;
 }
 
 //--------------------------------------------------------------------------------
-//  Uninitialize
+//  Uninit the instance
+//  インスタンスの終了処理
+//  终了处理
 //--------------------------------------------------------------------------------
 void MainSystem::Uninitialize()
 {
+    RenderSystem::ShutDown();
     GameTimer::ShutDown();
 }
 
 //--------------------------------------------------------------------------------
-//  GetSystemLanguage
+//  Get the os' user language
+//  OSの言語を取得
+//  取得OS的语言
 //--------------------------------------------------------------------------------
 void MainSystem::GetSystemLanguage()
 {
@@ -289,7 +307,14 @@ void MainSystem::GetSystemLanguage()
 }
 
 //--------------------------------------------------------------------------------
-//  InitializeWindow
+//  Initialize game window
+//  Return：true when succeeded, else false
+//ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+//  ウインドウ初期化処理
+//  戻り値：成功したらtrue、失敗したらfalse
+//ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+//  窗口初始化
+//  返回值：成功则返回true、反之返回false
 //--------------------------------------------------------------------------------
 bool MainSystem::InitializeWindow()
 {
@@ -344,7 +369,9 @@ bool MainSystem::InitializeWindow()
 }
 
 //--------------------------------------------------------------------------------
-//  Update
+//  Call the game systems' update function
+//  ゲームシステムの更新
+//  更新处理
 //--------------------------------------------------------------------------------
 void MainSystem::Update()
 {
@@ -352,9 +379,11 @@ void MainSystem::Update()
 }
 
 //--------------------------------------------------------------------------------
-//  Render
+//  Render the current scene
+//  描画処理
+//  渲染处理
 //--------------------------------------------------------------------------------
 void MainSystem::Render()
 {
-
+    RenderSystem::Instance().Render();
 }

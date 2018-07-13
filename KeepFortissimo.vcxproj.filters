@@ -37,6 +37,9 @@
     <Filter Include="ヘッダー ファイル\Libraries\DirectXMath">
       <UniqueIdentifier>{a28fbb7b-9656-4baa-9d41-da0ad4ee887e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Libraries\DirectX12">
+      <UniqueIdentifier>{4be7a77b-7652-4d13-bb62-f77017c1ac82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SourceCodes\main.cpp">
@@ -50,6 +53,12 @@
     </ClCompile>
     <ClCompile Include="SourceCodes\Systems\render_system.cpp">
       <Filter>ソース ファイル\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\render_system_directx12.cpp">
+      <Filter>ソース ファイル\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Utilities\kf_utilities.cpp">
+      <Filter>ソース ファイル\Utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,6 +94,12 @@
     </ClInclude>
     <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXPackedVector.h">
       <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\render_system_directx12.h">
+      <Filter>ヘッダー ファイル\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Libraries\DirectX12\d3dx12.h">
+      <Filter>ヘッダー ファイル\Libraries\DirectX12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

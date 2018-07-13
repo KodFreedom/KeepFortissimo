@@ -20,6 +20,16 @@ using namespace KeepFortissimo;
 //--------------------------------------------------------------------------------
 void RenderSystem::Render()
 {
+    if (PrepareRender())
+    {
+        // TODO : render components
+
+        EndRender();
+    }
+    else
+    {
+        // TODO : clear components
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -32,7 +42,7 @@ void RenderSystem::SetMsaaEnable(bool value)
 
 //--------------------------------------------------------------------------------
 //
-//  Private
+//  Protected
 //
 //--------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------
@@ -40,9 +50,9 @@ void RenderSystem::SetMsaaEnable(bool value)
 //--------------------------------------------------------------------------------
 RenderSystem::RenderSystem(const RenderApiType type)
     : Singleton<RenderSystem>()
-    , msaa_enable_(true)
+    , msaa_enable_(false)
     , msaa_quality_(0)
-    , background_color_(DirectX::Colors::Blue)
+    , background_color_(DirectX::Colors::LightBlue)
     , api_type_(type)
 {
 }
