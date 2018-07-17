@@ -106,6 +106,18 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
+        //--------------------------------------------------------------------------------
+        //  Check that if the window is paused
+        //  Return：true if paused, else false
+        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        //  ウインドウはポースしたかどうかを返す
+        //  戻り値：ポースしたらtrueを返す、じゃなかったらfalse
+        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        //  返回窗口是否被暂停
+        //  返回值：暂停则返回true，反之false
+        //--------------------------------------------------------------------------------
+        bool Paused() const { return paused_; }
+
     private:
         //--------------------------------------------------------------------------------
         //  constructor
@@ -173,6 +185,41 @@ namespace KeepFortissimo
         void Render();
 
         //--------------------------------------------------------------------------------
+        //  Update when WM_ACTIVATE is called
+        //  WM_ACTIVATEの時呼ばれる
+        //  WM_ACTIVATE时呼出
+        //--------------------------------------------------------------------------------
+        void OnWmActivate(WPARAM wparam);
+
+        //--------------------------------------------------------------------------------
+        //  Update when WM_SIZE is called
+        //  WM_SIZEの時呼ばれる
+        //  WM_SIZE时呼出
+        //--------------------------------------------------------------------------------
+        void OnWmSize(WPARAM wparam, LPARAM lparam);
+
+        //--------------------------------------------------------------------------------
+        //  Update when WM_ENTERSIZEMOVE is called
+        //  WM_ENTERSIZEMOVEの時呼ばれる
+        //  WM_ENTERSIZEMOVE时呼出
+        //--------------------------------------------------------------------------------
+        void OnWmEnterSizeMove();
+
+        //--------------------------------------------------------------------------------
+        //  Update when WM_EXITSIZEMOVE is called
+        //  WM_EXITSIZEMOVEの時呼ばれる
+        //  WM_EXITSIZEMOVE时呼出
+        //--------------------------------------------------------------------------------
+        void OnWmExitSizeMove();
+
+        //--------------------------------------------------------------------------------
+        //  Update when WM_KEYUP is called
+        //  WM_KEYUPの時呼ばれる
+        //  WM_KEYUP时呼出
+        //--------------------------------------------------------------------------------
+        void OnWmKeyUp(WPARAM wparam, LPARAM lparam);
+
+        //--------------------------------------------------------------------------------
         //  const variable / 定数 / 定量
         //--------------------------------------------------------------------------------
         static constexpr UINT kDefaultWidth = 1280;
@@ -188,6 +235,7 @@ namespace KeepFortissimo
         bool      maximized_;
         bool      resizing_;
         bool      fullscreen_state_;
+        bool      initialized_;
         UINT      width_;
         UINT      height_;
         Language  current_language_;

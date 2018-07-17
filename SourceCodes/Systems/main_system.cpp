@@ -85,91 +85,23 @@ LRESULT MainSystem::MsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     switch (msg)
     {
         // WM_ACTIVATE is sent when the window is activated or deactivated.  
-        // We pause the game when the window is deactivated and unpause it 
-        // when it becomes active.  
     case WM_ACTIVATE:
-        if (LOWORD(wparam) == WA_INACTIVE)
-        {
-            paused_ = true;
-            GameTimer::Instance().SetTimeScale(0.0f);
-        }
-        else
-        {
-            paused_ = false;
-            GameTimer::Instance().SetTimeScale(1.0f);
-        }
+        OnWmActivate(wparam);
         return 0;
 
         // WM_SIZE is sent when the user resizes the window.  
     case WM_SIZE:
-        // Save the new client area dimensions.
-        width_ = LOWORD(lparam);
-        height_ = HIWORD(lparam);
-        //if (render_system_)
-        //{
-        //    if (wparam == SIZE_MINIMIZED)
-        //    {
-        //        paused_ = true;
-        //        minimized_ = true;
-        //        maximized_ = false;
-        //    }
-        //    else if (wparam == SIZE_MAXIMIZED)
-        //    {
-        //        paused_ = false;
-        //        minimized_ = false;
-        //        maximized_ = true;
-        //        render_system_->OnResize();
-        //    }
-        //    else if (wparam == SIZE_RESTORED)
-        //    {
-        //        // Restoring from minimized state?
-        //        if (minimized_)
-        //        {
-        //            paused_ = false;
-        //            minimized_ = false;
-        //            render_system_->OnResize();
-        //        }
-
-        //        // Restoring from maximized state?
-        //        else if (maximized_)
-        //        {
-        //            paused_ = false;
-        //            maximized_ = false;
-        //            render_system_->OnResize();
-        //        }
-        //        else if (resizing_)
-        //        {
-        //            // If user is dragging the resize bars, we do not resize 
-        //            // the buffers here because as the user continuously 
-        //            // drags the resize bars, a stream of WM_SIZE messages are
-        //            // sent to the window, and it would be pointless (and slow)
-        //            // to resize for each WM_SIZE message received from dragging
-        //            // the resize bars.  So instead, we reset after the user is 
-        //            // done resizing the window and releases the resize bars, which 
-        //            // sends a WM_EXITSIZEMOVE message.
-        //        }
-        //        else // API call such as SetWindowPos or mSwapChain->SetFullscreenState.
-        //        {
-        //            render_system_->OnResize();
-        //        }
-        //    }
-        //}
+        OnWmSize(wparam, lparam);
         return 0;
 
         // WM_EXITSIZEMOVE is sent when the user grabs the resize bars.
     case WM_ENTERSIZEMOVE:
-        paused_ = true;
-        resizing_ = true;
-        GameTimer::Instance().SetTimeScale(0.0f);
+        OnWmEnterSizeMove();
         return 0;
 
         // WM_EXITSIZEMOVE is sent when the user releases the resize bars.
-        // Here we reset everything based on the new window dimensions.
     case WM_EXITSIZEMOVE:
-        paused_ = false;
-        resizing_ = false;
-        GameTimer::Instance().SetTimeScale(1.0f);
-        //if (render_system_) render_system_->OnResize();
+        OnWmExitSizeMove();
         return 0;
 
         // WM_DESTROY is sent when the window is being destroyed.
@@ -190,15 +122,7 @@ LRESULT MainSystem::MsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         return 0;
 
     case WM_KEYUP:
-        if (wparam == VK_ESCAPE)
-        {
-            PostQuitMessage(0);
-        }
-        //else if ((int)wparam == VK_F2)
-        //{
-        //    if (render_system_) render_system_->SetMsaaState(!render_system_->GetMsaaState());
-        //}
-
+        OnWmKeyUp(wparam, lparam);
         return 0;
     }
 
@@ -222,6 +146,7 @@ MainSystem::MainSystem(HINSTANCE instance_handle)
     , maximized_(false)
     , resizing_(false)
     , fullscreen_state_(false)
+    , initialized_(false)
     , width_(kDefaultWidth)
     , height_(kDefaultHeight)
     , current_language_(kEnglish)
@@ -266,6 +191,7 @@ bool MainSystem::Initialize()
         return false;
     }
 
+    initialized_ = true;
     return true;
 }
 
@@ -386,4 +312,119 @@ void MainSystem::Update()
 void MainSystem::Render()
 {
     RenderSystem::Instance().Render();
+}
+
+//--------------------------------------------------------------------------------
+//  Update when WM_ACTIVATE is called
+//  WM_ACTIVATEの時呼ばれる
+//  WM_ACTIVATE时呼出
+//--------------------------------------------------------------------------------
+void MainSystem::OnWmActivate(WPARAM wparam)
+{
+    // We pause the game when the window is deactivated and unpause it 
+    // when it becomes active. 
+    paused_ = LOWORD(wparam) == WA_INACTIVE;
+}
+
+//--------------------------------------------------------------------------------
+//  Update when WM_SIZE is called
+//  WM_SIZEの時呼ばれる
+//  WM_SIZE时呼出
+//--------------------------------------------------------------------------------
+void MainSystem::OnWmSize(WPARAM wparam, LPARAM lparam)
+{
+    // Save the new client area dimensions.
+    width_ = LOWORD(lparam);
+    height_ = HIWORD(lparam);
+    
+    if (initialized_ == false) return;
+
+    if (wparam == SIZE_MINIMIZED)
+    {
+        paused_ = true;
+        minimized_ = true;
+        maximized_ = false;
+    }
+    else if (wparam == SIZE_MAXIMIZED)
+    {
+        paused_ = false;
+        minimized_ = false;
+        maximized_ = true;
+        RenderSystem::Instance().OnResize();
+    }
+    else if (wparam == SIZE_RESTORED)
+    {
+        // Restoring from minimized state
+        if (minimized_)
+        {
+            paused_ = false;
+            minimized_ = false;
+            RenderSystem::Instance().OnResize();
+        }
+
+        // Restoring from maximized state
+        else if (maximized_)
+        {
+            paused_ = false;
+            maximized_ = false;
+            RenderSystem::Instance().OnResize();
+        }
+        else if (resizing_)
+        {
+            // If user is dragging the resize bars, we do not resize 
+            // the buffers here because as the user continuously 
+            // drags the resize bars, a stream of WM_SIZE messages are
+            // sent to the window, and it would be pointless (and slow)
+            // to resize for each WM_SIZE message received from dragging
+            // the resize bars.  So instead, we reset after the user is 
+            // done resizing the window and releases the resize bars, which 
+            // sends a WM_EXITSIZEMOVE message.
+        }
+        else // API call such as SetWindowPos or mSwapChain->SetFullscreenState.
+        {
+            RenderSystem::Instance().OnResize();
+        }
+    }
+}
+
+//--------------------------------------------------------------------------------
+//  Update when WM_ENTERSIZEMOVE is called
+//  WM_ENTERSIZEMOVEの時呼ばれる
+//  WM_ENTERSIZEMOVE时呼出
+//--------------------------------------------------------------------------------
+void MainSystem::OnWmEnterSizeMove()
+{
+    paused_ = true;
+    resizing_ = true;
+}
+
+//--------------------------------------------------------------------------------
+//  Update when WM_EXITSIZEMOVE is called
+//  WM_EXITSIZEMOVEの時呼ばれる
+//  WM_EXITSIZEMOVE时呼出
+//--------------------------------------------------------------------------------
+void MainSystem::OnWmExitSizeMove()
+{
+    // Here we reset everything based on the new window dimensions.
+    paused_ = false;
+    resizing_ = false;
+    if (initialized_ == false) return;
+    RenderSystem::Instance().OnResize();
+}
+
+//--------------------------------------------------------------------------------
+//  Update when WM_KEYUP is called
+//  WM_KEYUPの時呼ばれる
+//  WM_KEYUP时呼出
+//--------------------------------------------------------------------------------
+void MainSystem::OnWmKeyUp(WPARAM wparam, LPARAM lparam)
+{
+    if (wparam == VK_ESCAPE)
+    {
+        PostQuitMessage(0);
+    }
+    //else if ((int)wparam == VK_F2)
+    //{
+    //    if (render_system_) render_system_->SetMsaaState(!render_system_->GetMsaaState());
+    //}
 }

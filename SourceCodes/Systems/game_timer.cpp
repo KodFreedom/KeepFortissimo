@@ -8,6 +8,7 @@
 //  Email  : kodfreedom@gmail.com
 //--------------------------------------------------------------------------------
 #include "game_timer.h"
+#include "main_system.h"
 using namespace KeepFortissimo;
 
 //--------------------------------------------------------------------------------
@@ -43,7 +44,8 @@ void GameTimer::Tick()
     delta_time_ = static_cast<float>(current_time_.QuadPart - exec_last_time_.QuadPart)
         / static_cast<float>(frequency_.QuadPart);
 
-    scaled_delta_time_ = delta_time_ * time_scale_;
+    scaled_delta_time_ = delta_time_ * time_scale_
+        * static_cast<float>(MainSystem::Instance().Paused() ^ 1);
 }
 
 //--------------------------------------------------------------------------------
