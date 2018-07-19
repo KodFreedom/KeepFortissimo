@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -20,14 +20,34 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SourceCodes\main.cpp" />
+    <ClCompile Include="SourceCodes\Systems\game_timer.cpp" />
     <ClCompile Include="SourceCodes\Systems\main_system.cpp" />
+    <ClCompile Include="SourceCodes\Systems\render_system.cpp" />
+    <ClCompile Include="SourceCodes\Systems\render_system_directx12.cpp" />
+    <ClCompile Include="SourceCodes\Utilities\kf_utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SourceCodes\Libraries\DirectX12\d3dx12.h" />
+    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXCollision.h" />
+    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXColors.h" />
+    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXMath.h" />
+    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXPackedVector.h" />
+    <ClInclude Include="SourceCodes\Systems\game_timer.h" />
     <ClInclude Include="SourceCodes\Systems\main_system.h" />
+    <ClInclude Include="SourceCodes\Systems\render_system.h" />
+    <ClInclude Include="SourceCodes\Systems\render_system_directx12.h" />
     <ClInclude Include="SourceCodes\Systems\system_setting.h" />
     <ClInclude Include="SourceCodes\Utilities\kf_labels.h" />
     <ClInclude Include="SourceCodes\Utilities\kf_utilities.h" />
     <ClInclude Include="SourceCodes\Utilities\singleton.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXCollision.inl" />
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathConvert.inl" />
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathMatrix.inl" />
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathMisc.inl" />
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathVector.inl" />
+    <None Include="SourceCodes\Libraries\DirectXMath\DirectXPackedVector.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
