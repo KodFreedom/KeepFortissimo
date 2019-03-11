@@ -95,7 +95,7 @@ namespace KeepFortissimo
 #define ThrowIfFailed(x)                                                        \
 {                                                                               \
     HRESULT hresult = (x);                                                      \
-    const String& file_name = AnsiToString(__FILE__);                                 \
+    const String& file_name = AnsiToString(__FILE__);                           \
     if(FAILED(hresult)) { throw Exception(hresult, L#x, file_name, __LINE__); } \
 }
 #endif

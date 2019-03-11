@@ -126,8 +126,11 @@ void RenderSystemDirectX12::OnResize()
     device_->CreateDepthStencilView(depth_stencil_buffer_.Get(), &dsv_desc, DepthStencilView());
 
     // Transition the resource from its initial state to be used as a depth buffer.
-    command_list_->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depth_stencil_buffer_.Get(),
-        D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	// 资源转换，防止资源冒险(resource hazard) 书p100
+    command_list_->ResourceBarrier(1, 
+		&CD3DX12_RESOURCE_BARRIER::Transition(depth_stencil_buffer_.Get(),
+        D3D12_RESOURCE_STATE_COMMON, 
+		D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
     // Execute the resize commands.
     ThrowIfFailed(command_list_->Close());
@@ -239,8 +242,10 @@ bool RenderSystemDirectX12::PrepareRender()
     ThrowIfFailed(command_list_->Reset(command_list_allocator_.Get(), nullptr));
 
     // Indicate a state transition on the resource usage.
-    command_list_->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-        D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+    command_list_->ResourceBarrier(1,
+		&CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+        D3D12_RESOURCE_STATE_PRESENT,
+		D3D12_RESOURCE_STATE_RENDER_TARGET));
 
     // Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
     command_list_->RSSetViewports(1, &screen_viewport_);
@@ -254,8 +259,10 @@ bool RenderSystemDirectX12::PrepareRender()
     command_list_->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 
     // Indicate a state transition on the resource usage.
-    command_list_->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+    command_list_->ResourceBarrier(1, 
+		&CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET, 
+		D3D12_RESOURCE_STATE_PRESENT));
 
     // Done recording commands.
     ThrowIfFailed(command_list_->Close());

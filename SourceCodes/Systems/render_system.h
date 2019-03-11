@@ -9,8 +9,8 @@
 //--------------------------------------------------------------------------------
 #pragma once
 #include <Windows.h>
+#include <DirectXColors.h>
 #include "../Utilities/singleton.h"
-#include "../Libraries/DirectXMath/DirectXColors.h"
 
 namespace KeepFortissimo
 {

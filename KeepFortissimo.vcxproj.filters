@@ -34,11 +34,8 @@
     <Filter Include="ヘッダー ファイル\Libraries">
       <UniqueIdentifier>{2fd2105a-ce07-4738-a491-5eab8f545b73}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\Libraries\DirectXMath">
-      <UniqueIdentifier>{a28fbb7b-9656-4baa-9d41-da0ad4ee887e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\Libraries\DirectX12">
-      <UniqueIdentifier>{4be7a77b-7652-4d13-bb62-f77017c1ac82}</UniqueIdentifier>
+      <UniqueIdentifier>{184f9609-55c3-4768-a3ab-1e0ec4f3227d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -83,43 +80,11 @@
     <ClInclude Include="SourceCodes\Systems\render_system.h">
       <Filter>ヘッダー ファイル\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXCollision.h">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </ClInclude>
-    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXColors.h">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </ClInclude>
-    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXMath.h">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </ClInclude>
-    <ClInclude Include="SourceCodes\Libraries\DirectXMath\DirectXPackedVector.h">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </ClInclude>
     <ClInclude Include="SourceCodes\Systems\render_system_directx12.h">
       <Filter>ヘッダー ファイル\Systems</Filter>
     </ClInclude>
     <ClInclude Include="SourceCodes\Libraries\DirectX12\d3dx12.h">
       <Filter>ヘッダー ファイル\Libraries\DirectX12</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="SourceCodes\Libraries\DirectXMath\DirectXCollision.inl">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </None>
-    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathConvert.inl">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </None>
-    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathMatrix.inl">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </None>
-    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathMisc.inl">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </None>
-    <None Include="SourceCodes\Libraries\DirectXMath\DirectXMathVector.inl">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </None>
-    <None Include="SourceCodes\Libraries\DirectXMath\DirectXPackedVector.inl">
-      <Filter>ヘッダー ファイル\Libraries\DirectXMath</Filter>
-    </None>
   </ItemGroup>
 </Project>

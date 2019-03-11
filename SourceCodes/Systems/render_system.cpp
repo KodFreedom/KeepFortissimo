@@ -52,7 +52,7 @@ RenderSystem::RenderSystem(const RenderApiType type)
     : Singleton<RenderSystem>()
     , msaa_enable_(false)
     , msaa_quality_(0)
-    , background_color_(DirectX::Colors::LightBlue)
+    , background_color_(DirectX::Colors::Yellow)
     , api_type_(type)
 {
 }
