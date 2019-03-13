@@ -18,8 +18,9 @@ using namespace KeepFortissimo;
 
 int WINAPI WinMain(HINSTANCE instance_handle, HINSTANCE previous_instance_handle, PSTR command_line, int show_command)
 {
-    // Enable run-time memory check for debug builds.
 #if defined(DEBUG) | defined(_DEBUG)
+    // Enable run-time memory check for debug builds.
+    // 开启运行时的内存检测，方便监督内存泄露的情况
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 

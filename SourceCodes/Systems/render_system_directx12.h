@@ -143,6 +143,20 @@ namespace KeepFortissimo
         void FlushCommandQueue();
 
         //--------------------------------------------------------------------------------
+        //  Create the render target view.
+        //  render target viewの作成
+        //  为swapchain的每一个buffer创建RTV
+        //--------------------------------------------------------------------------------
+        void CreateRenderTargetView();
+
+        //--------------------------------------------------------------------------------
+        //  Create the depth/stencil buffer and view.
+        //  depth/stencil buffer and viewの作成
+        //  创建深度/模板缓冲区及视图
+        //--------------------------------------------------------------------------------
+        void CreateDepthStencilBufferView(const UINT width, const UINT height);
+
+        //--------------------------------------------------------------------------------
         //  Get the current backbuffer
         //  今のバックバッファを取得する
         //  返回现在的备用缓冲区

@@ -71,66 +71,12 @@ void RenderSystemDirectX12::OnResize()
 
     current_back_buffer_ = 0;
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_heap_handle(rtv_heap_->GetCPUDescriptorHandleForHeapStart());
-    for (UINT i = 0; i < kSwapChainBufferCount; i++)
-    {
-        ThrowIfFailed(swap_chain_->GetBuffer(i, IID_PPV_ARGS(&swap_chain_buffer_[i])));
-        device_->CreateRenderTargetView(swap_chain_buffer_[i].Get(), nullptr, rtv_heap_handle);
-        rtv_heap_handle.Offset(1, rtv_descriptor_size_);
-    }
+    // 为swapchain的每一个buffer创建RTV
+    CreateRenderTargetView();
 
     // Create the depth/stencil buffer and view.
-    D3D12_RESOURCE_DESC depth_stencil_desc;
-    depth_stencil_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    depth_stencil_desc.Alignment = 0;
-    depth_stencil_desc.Width = width;
-    depth_stencil_desc.Height = height;
-    depth_stencil_desc.DepthOrArraySize = 1;
-    depth_stencil_desc.MipLevels = 1;
-
-    // Correction 11/12/2016: SSAO chapter requires an SRV to the depth buffer to read from 
-    // the depth buffer.  Therefore, because we need to create two views to the same resource:
-    //   1. SRV format: DXGI_FORMAT_R24_UNORM_X8_TYPELESS
-    //   2. DSV Format: DXGI_FORMAT_D24_UNORM_S8_UINT
-    // we need to create the depth buffer resource with a typeless format.  
-    depth_stencil_desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-    depth_stencil_desc.SampleDesc.Count = msaa_enable_ ? 4 : 1;
-    depth_stencil_desc.SampleDesc.Quality = msaa_enable_ ? (msaa_quality_ - 1) : 0;
-    depth_stencil_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    depth_stencil_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-    D3D12_CLEAR_VALUE opt_clear;
-    opt_clear.Format = depth_stencil_format_;
-    opt_clear.DepthStencil.Depth = 1.0f;
-    opt_clear.DepthStencil.Stencil = 0;
-
-    ThrowIfFailed
-    (
-        device_->CreateCommittedResource
-        (
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &depth_stencil_desc,
-            D3D12_RESOURCE_STATE_COMMON,
-            &opt_clear,
-            IID_PPV_ARGS(depth_stencil_buffer_.GetAddressOf())
-        )
-    );
-
-    // Create descriptor to mip level 0 of entire resource using the format of the resource.
-    D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc;
-    dsv_desc.Flags = D3D12_DSV_FLAG_NONE;
-    dsv_desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-    dsv_desc.Format = depth_stencil_format_;
-    dsv_desc.Texture2D.MipSlice = 0;
-    device_->CreateDepthStencilView(depth_stencil_buffer_.Get(), &dsv_desc, DepthStencilView());
-
-    // Transition the resource from its initial state to be used as a depth buffer.
-	// 资源转换，防止资源冒险(resource hazard) 书p100
-    command_list_->ResourceBarrier(1, 
-		&CD3DX12_RESOURCE_BARRIER::Transition(depth_stencil_buffer_.Get(),
-        D3D12_RESOURCE_STATE_COMMON, 
-		D3D12_RESOURCE_STATE_DEPTH_WRITE));
+    // 创建深度/模板缓冲区及视图
+    CreateDepthStencilBufferView(width, height);
 
     // Execute the resize commands.
     ThrowIfFailed(command_list_->Close());
@@ -218,7 +164,7 @@ bool RenderSystemDirectX12::Initialize()
 //--------------------------------------------------------------------------------
 void RenderSystemDirectX12::Uninitialize()
 {
-
+    
 }
 
 //--------------------------------------------------------------------------------
@@ -235,39 +181,96 @@ bool RenderSystemDirectX12::PrepareRender()
 {
     // Reuse the memory associated with command recording.
     // We can only reset when the associated command lists have finished execution on the GPU.
+    // 重复使用记录命令的相关内存
+    // 只有当与GPU关联的命令列表执行完成时，才能将其重置
     ThrowIfFailed(command_list_allocator_->Reset());
 
     // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
     // Reusing the command list reuses memory.
-    ThrowIfFailed(command_list_->Reset(command_list_allocator_.Get(), nullptr));
+    // 将通过ExecuteCommandList方法将某个命令列表加入命令队列后，便可重置该命令
+    // 以此来复用命令列表及其内存
+    ThrowIfFailed
+    (
+        command_list_->Reset
+        (
+            command_list_allocator_.Get(),
+            nullptr
+        )
+    );
 
     // Indicate a state transition on the resource usage.
-    command_list_->ResourceBarrier(1,
-		&CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-        D3D12_RESOURCE_STATE_PRESENT,
-		D3D12_RESOURCE_STATE_RENDER_TARGET));
+    // 对资源的状态进行转换，将资源从呈现状态转换为渲染目标状态
+    command_list_->ResourceBarrier
+    (
+        1,
+        &CD3DX12_RESOURCE_BARRIER::Transition
+        (
+            CurrentBackBuffer(),
+            D3D12_RESOURCE_STATE_PRESENT,
+            D3D12_RESOURCE_STATE_RENDER_TARGET
+        )
+    );
 
     // Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
-    command_list_->RSSetViewports(1, &screen_viewport_);
-    command_list_->RSSetScissorRects(1, &scissor_rect_);
+    // 设置视口和裁剪矩形，它们需要随着命令列表的重置而重置
+    command_list_->RSSetViewports
+    (
+        1, 
+        &screen_viewport_
+    );
+
+    command_list_->RSSetScissorRects
+    (
+        1,
+        &scissor_rect_
+    );
 
     // Clear the back buffer and depth buffer.
-    command_list_->ClearRenderTargetView(CurrentBackBufferView(), background_color_, 0, nullptr);
-    command_list_->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    // 清除后台缓冲区和深度缓冲区
+    command_list_->ClearRenderTargetView
+    (
+        CurrentBackBufferView(),
+        background_color_, 
+        0, 
+        nullptr
+    );
+
+    command_list_->ClearDepthStencilView
+    (
+        DepthStencilView(),
+        D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+        1.0f,
+        0,
+        0,
+        nullptr
+    );
 
     // Specify the buffers we are going to render to.
-    command_list_->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+    // 指定将要渲染的缓冲区
+    command_list_->OMSetRenderTargets
+    (
+        1, 
+        &CurrentBackBufferView(),
+        true,
+        &DepthStencilView()
+    );
 
     // Indicate a state transition on the resource usage.
-    command_list_->ResourceBarrier(1, 
-		&CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+    // 再次对资源状态进行转换，将资源从渲染目标状态转换回呈现状态
+    command_list_->ResourceBarrier
+    (
+        1, 
+        &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
         D3D12_RESOURCE_STATE_RENDER_TARGET, 
-		D3D12_RESOURCE_STATE_PRESENT));
+        D3D12_RESOURCE_STATE_PRESENT)
+    );
 
     // Done recording commands.
+    // 完成命令记录
     ThrowIfFailed(command_list_->Close());
 
     // Add the command list to the queue for execution.
+    // 将待执行的命令列表加入命令队列
     ID3D12CommandList* command_lists[] = { command_list_.Get() };
     command_queue_->ExecuteCommandLists(_countof(command_lists), command_lists);
 
@@ -282,12 +285,15 @@ bool RenderSystemDirectX12::PrepareRender()
 void RenderSystemDirectX12::EndRender()
 {
     // swap the back and front buffers
+    // 交换前台与后台缓冲区
     ThrowIfFailed(swap_chain_->Present(0, 0));
     current_back_buffer_ = (current_back_buffer_ + 1) % kSwapChainBufferCount;
 
     // Wait until frame commands are complete.  This waiting is inefficient and is
     // done for simplicity.  Later we will show how to organize our rendering code
     // so we do not have to wait per frame.
+    // 等待此前的命令执行完毕，当前的实现没有什么效果，也过于简单
+    // 在后面将重新组织渲染部分的代码，以免在每一帧都要等待
     FlushCommandQueue();
 }
 
@@ -371,7 +377,7 @@ void RenderSystemDirectX12::CheckMsaaQuality()
 //--------------------------------------------------------------------------------
 //  Create the descriptor heap of render target view and depth stencil view
 //  RtvとDsvのdescriptor heapを作成
-//  生成Rtv和Dsv的descriptor heap
+//  生成Rtv和Dsv的descriptor heap/描述符堆
 //--------------------------------------------------------------------------------
 void RenderSystemDirectX12::CreateRtvAndDsvDescriptorHeaps()
 {
@@ -473,6 +479,7 @@ void RenderSystemDirectX12::CreateSwapChain()
     swap_chain_desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
     // Note: Swap chain uses queue to perform flush.
+    // swapchain需要通过commandqueue对其进行刷新
     ThrowIfFailed
     (
         factory_->CreateSwapChain
@@ -514,6 +521,115 @@ void RenderSystemDirectX12::FlushCommandQueue()
 }
 
 //--------------------------------------------------------------------------------
+//  Create the render target view.
+//  render target viewの作成
+//  为swapchain的每一个buffer创建RTV
+//--------------------------------------------------------------------------------
+void RenderSystemDirectX12::CreateRenderTargetView()
+{
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_heap_handle(rtv_heap_->GetCPUDescriptorHandleForHeapStart());
+    for (UINT i = 0; i < kSwapChainBufferCount; i++)
+    {
+        // 获得存于swapchain中的buffer
+        ThrowIfFailed
+        (
+            swap_chain_->GetBuffer
+            (
+                i, // 希望获得的特定backbuffer的index
+                IID_PPV_ARGS(&swap_chain_buffer_[i])
+            )
+        );
+
+        // 为获取的backbuffer创建rtv
+        device_->CreateRenderTargetView
+        (
+            swap_chain_buffer_[i].Get(),
+            nullptr, // 指向D3D12_RENDER_TARGET_VIEW_DESC数据结构的pointer
+                     // 如果该资源在创建时已指定了具体格式(not typeless)
+                     // 那么就可以把这个参数设为nullptr，表示采用该资源创建时的格式
+                     // 为它的第一个mipmap层级创建一个视图
+            rtv_heap_handle
+        );
+
+        // 偏移到下一个buffer
+        rtv_heap_handle.Offset
+        (
+            1,
+            rtv_descriptor_size_
+        );
+    }
+}
+
+//--------------------------------------------------------------------------------
+//  Create the depth/stencil buffer and view.
+//  depth/stencil buffer and viewの作成
+//  创建深度/模板缓冲区及视图
+//--------------------------------------------------------------------------------
+void RenderSystemDirectX12::CreateDepthStencilBufferView(const UINT width, const UINT height)
+{
+    D3D12_RESOURCE_DESC depth_stencil_desc;
+    depth_stencil_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // 资源的维度
+    depth_stencil_desc.Alignment = 0;
+    depth_stencil_desc.Width = width;
+    depth_stencil_desc.Height = height;
+    depth_stencil_desc.DepthOrArraySize = 1;
+    depth_stencil_desc.MipLevels = 1;
+
+    // Correction 11/12/2016: SSAO chapter requires an SRV to the depth buffer to read from 
+    // the depth buffer.  Therefore, because we need to create two views to the same resource:
+    //   1. SRV format: DXGI_FORMAT_R24_UNORM_X8_TYPELESS
+    //   2. DSV Format: DXGI_FORMAT_D24_UNORM_S8_UINT
+    // we need to create the depth buffer resource with a typeless format.  
+    depth_stencil_desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    depth_stencil_desc.SampleDesc.Count = msaa_enable_ ? 4 : 1;
+    depth_stencil_desc.SampleDesc.Quality = msaa_enable_ ? (msaa_quality_ - 1) : 0;
+    depth_stencil_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    depth_stencil_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+    D3D12_CLEAR_VALUE opt_clear;
+    opt_clear.Format = depth_stencil_format_;
+    opt_clear.DepthStencil.Depth = 1.0f;
+    opt_clear.DepthStencil.Stencil = 0;
+
+    ThrowIfFailed
+    (
+        device_->CreateCommittedResource
+        (
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &depth_stencil_desc,
+            D3D12_RESOURCE_STATE_COMMON,
+            &opt_clear,
+            IID_PPV_ARGS(depth_stencil_buffer_.GetAddressOf())
+        )
+    );
+
+    // Create descriptor to mip level 0 of entire resource using the format of the resource.
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc;
+    dsv_desc.Flags = D3D12_DSV_FLAG_NONE;
+    dsv_desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    dsv_desc.Format = depth_stencil_format_;
+    dsv_desc.Texture2D.MipSlice = 0;
+    device_->CreateDepthStencilView
+    (
+        depth_stencil_buffer_.Get(),
+        &dsv_desc,
+        DepthStencilView()
+    );
+
+    // Transition the resource from its initial state to be used as a depth buffer.
+    // 将资源从初始状态转换为深度缓冲区
+    // 资源转换，防止资源冒险(resource hazard) 书p100
+    command_list_->ResourceBarrier
+    (
+        1,
+        &CD3DX12_RESOURCE_BARRIER::Transition(depth_stencil_buffer_.Get(),
+            D3D12_RESOURCE_STATE_COMMON,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE)
+    );
+}
+
+//--------------------------------------------------------------------------------
 //  Get the current backbuffer
 //  Return：ID3D12Resource*
 //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -540,9 +656,10 @@ ID3D12Resource* RenderSystemDirectX12::CurrentBackBuffer() const
 //--------------------------------------------------------------------------------
 D3D12_CPU_DESCRIPTOR_HANDLE RenderSystemDirectX12::CurrentBackBufferView() const
 {
+    // 根据给定的偏移量找到当前后台缓冲区的RTV
     return CD3DX12_CPU_DESCRIPTOR_HANDLE
     (
-        rtv_heap_->GetCPUDescriptorHandleForHeapStart(),
+        rtv_heap_->GetCPUDescriptorHandleForHeapStart(), // heap中的首个handle
         current_back_buffer_,
         rtv_descriptor_size_
     );

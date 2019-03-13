@@ -53,7 +53,11 @@ void GameTimer::Tick()
 //--------------------------------------------------------------------------------
 bool GameTimer::CanUpdateFrame(void)
 {
-    if (delta_time_ >= time_interval_)
+    if (MainSystem::Instance().Paused())
+    {
+        return false;
+    }
+    else if (delta_time_ >= time_interval_)
     {
         exec_last_time_ = current_time_;
         return true;
