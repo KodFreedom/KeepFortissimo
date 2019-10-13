@@ -6,9 +6,7 @@ namespace KeepFortissimo
     class Collider : public Component
     {
     public:
-        Collider();
-        virtual ~Collider() override;
-
-    protected:
+        Collider() {}
+        virtual ~Collider() override {}
     };
 }

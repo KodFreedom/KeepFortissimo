@@ -24,21 +24,21 @@ using namespace std;
 //--------------------------------------------------------------------------------
 //  StartUp
 //--------------------------------------------------------------------------------
-bool RenderSystemDirectX12::StartUp()
-{
-    if (instance_ != nullptr) return true;
-    auto instance = MY_NEW RenderSystemDirectX12();
-    return instance->Initialize();
-}
+//bool RenderSystemDirectX12::StartUp()
+//{
+//    if (m_instance != nullptr) return true;
+//    MY_NEW RenderSystemDirectX12();
+//    return m_instance->Initialize();
+//}
 
 //--------------------------------------------------------------------------------
 //  OnResize
 //--------------------------------------------------------------------------------
 void RenderSystemDirectX12::OnResize()
 {
-    assert(device_);
-    assert(swap_chain_);
-    assert(command_list_allocator_);
+    assert(m_device);
+    assert(m_swap_chain);
+    assert(m_command_list_allocator);
 
     UINT width = MainSystem::Instance().Width();
     UINT height = MainSystem::Instance().Height();
@@ -46,30 +46,30 @@ void RenderSystemDirectX12::OnResize()
     // Flush before changing any resources.
     FlushCommandQueue();
 
-    ThrowIfFailed(command_list_->Reset(command_list_allocator_.Get(), nullptr));
+    ThrowIfFailed(m_command_list->Reset(m_command_list_allocator.Get(), nullptr));
 
     // Release the previous resources we will be recreating.
-    for (int i = 0; i < kSwapChainBufferCount; ++i)
+    for (int i = 0; i < sc_swap_chain_buffer_count; ++i)
     {
-        swap_chain_buffer_[i].Reset();
+        m_swap_chain_buffer[i].Reset();
     }
 
-    depth_stencil_buffer_.Reset();
+    m_depth_stencil_buffer.Reset();
 
     // Resize the swap chain.
     ThrowIfFailed
     (
-        swap_chain_->ResizeBuffers
+        m_swap_chain->ResizeBuffers
         (
-            kSwapChainBufferCount,
+            sc_swap_chain_buffer_count,
             width,
             height,
-            back_buffer_format_,
+            m_back_buffer_format,
             DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
         )
     );
 
-    current_back_buffer_ = 0;
+    m_current_back_buffer = 0;
 
     // 为swapchain的每一个buffer创建RTV
     CreateRenderTargetView();
@@ -79,22 +79,22 @@ void RenderSystemDirectX12::OnResize()
     CreateDepthStencilBufferView(width, height);
 
     // Execute the resize commands.
-    ThrowIfFailed(command_list_->Close());
-    ID3D12CommandList* command_lists[] = { command_list_.Get() };
-    command_queue_->ExecuteCommandLists(_countof(command_lists), command_lists);
+    ThrowIfFailed(m_command_list->Close());
+    ID3D12CommandList* command_lists[] = { m_command_list.Get() };
+    m_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
     // Wait until resize is complete.
     FlushCommandQueue();
 
     // Update the viewport transform to cover the client area.
-    screen_viewport_.TopLeftX = 0;
-    screen_viewport_.TopLeftY = 0;
-    screen_viewport_.Width = static_cast<float>(width);
-    screen_viewport_.Height = static_cast<float>(height);
-    screen_viewport_.MinDepth = 0.0f;
-    screen_viewport_.MaxDepth = 1.0f;
+    m_screen_viewport.TopLeftX = 0;
+    m_screen_viewport.TopLeftY = 0;
+    m_screen_viewport.Width = static_cast<float>(width);
+    m_screen_viewport.Height = static_cast<float>(height);
+    m_screen_viewport.MinDepth = 0.0f;
+    m_screen_viewport.MaxDepth = 1.0f;
 
-    scissor_rect_ = { 0, 0, (LONG)width, (LONG)height };
+    m_scissor_rect = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
 }
 
 //--------------------------------------------------------------------------------
@@ -106,16 +106,7 @@ void RenderSystemDirectX12::OnResize()
 //  RenderSystem
 //--------------------------------------------------------------------------------
 RenderSystemDirectX12::RenderSystemDirectX12()
-    : RenderSystem(kDirectX12)
-    , current_fence_(0)
-    , current_back_buffer_(0)
-    , rtv_descriptor_size_(0)
-    , dsv_descriptor_size_(0)
-    , cbv_srv_uav_descriptor_size_(0)
-    , driver_type_(D3D_DRIVER_TYPE_HARDWARE)
-    , back_buffer_format_(DXGI_FORMAT_R8G8B8A8_UNORM)
-    , depth_stencil_format_(DXGI_FORMAT_D24_UNORM_S8_UINT)
-    , feature_level_(D3D_FEATURE_LEVEL_11_0)
+    : RenderSystem(RenderApiType::kDirectX12)
 {
 }
 
@@ -145,9 +136,9 @@ bool RenderSystemDirectX12::Initialize()
     debug_controller->EnableDebugLayer();
 #endif
 
-    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&factory_)));
+    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&m_factory)));
     CreateDevice();
-    ThrowIfFailed(device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_)));
+    ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
     SaveDescriptorSize();
     CheckMsaaQuality();
     CreateCommandObjects();
@@ -183,7 +174,7 @@ bool RenderSystemDirectX12::PrepareRender()
     // We can only reset when the associated command lists have finished execution on the GPU.
     // 重复使用记录命令的相关内存
     // 只有当与GPU关联的命令列表执行完成时，才能将其重置
-    ThrowIfFailed(command_list_allocator_->Reset());
+    ThrowIfFailed(m_command_list_allocator->Reset());
 
     // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
     // Reusing the command list reuses memory.
@@ -191,16 +182,16 @@ bool RenderSystemDirectX12::PrepareRender()
     // 以此来复用命令列表及其内存
     ThrowIfFailed
     (
-        command_list_->Reset
+        m_command_list->Reset
         (
-            command_list_allocator_.Get(),
+            m_command_list_allocator.Get(),
             nullptr
         )
     );
 
     // Indicate a state transition on the resource usage.
     // 对资源的状态进行转换，将资源从呈现状态转换为渲染目标状态
-    command_list_->ResourceBarrier
+    m_command_list->ResourceBarrier
     (
         1,
         &CD3DX12_RESOURCE_BARRIER::Transition
@@ -213,29 +204,29 @@ bool RenderSystemDirectX12::PrepareRender()
 
     // Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
     // 设置视口和裁剪矩形，它们需要随着命令列表的重置而重置
-    command_list_->RSSetViewports
+    m_command_list->RSSetViewports
     (
         1, 
-        &screen_viewport_
+        &m_screen_viewport
     );
 
-    command_list_->RSSetScissorRects
+    m_command_list->RSSetScissorRects
     (
         1,
-        &scissor_rect_
+        &m_scissor_rect
     );
 
     // Clear the back buffer and depth buffer.
     // 清除后台缓冲区和深度缓冲区
-    command_list_->ClearRenderTargetView
+    m_command_list->ClearRenderTargetView
     (
         CurrentBackBufferView(),
-        background_color_, 
+        m_background_color, 
         0, 
         nullptr
     );
 
-    command_list_->ClearDepthStencilView
+    m_command_list->ClearDepthStencilView
     (
         DepthStencilView(),
         D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
@@ -247,7 +238,7 @@ bool RenderSystemDirectX12::PrepareRender()
 
     // Specify the buffers we are going to render to.
     // 指定将要渲染的缓冲区
-    command_list_->OMSetRenderTargets
+    m_command_list->OMSetRenderTargets
     (
         1, 
         &CurrentBackBufferView(),
@@ -257,7 +248,7 @@ bool RenderSystemDirectX12::PrepareRender()
 
     // Indicate a state transition on the resource usage.
     // 再次对资源状态进行转换，将资源从渲染目标状态转换回呈现状态
-    command_list_->ResourceBarrier
+    m_command_list->ResourceBarrier
     (
         1, 
         &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
@@ -267,12 +258,12 @@ bool RenderSystemDirectX12::PrepareRender()
 
     // Done recording commands.
     // 完成命令记录
-    ThrowIfFailed(command_list_->Close());
+    ThrowIfFailed(m_command_list->Close());
 
     // Add the command list to the queue for execution.
     // 将待执行的命令列表加入命令队列
-    ID3D12CommandList* command_lists[] = { command_list_.Get() };
-    command_queue_->ExecuteCommandLists(_countof(command_lists), command_lists);
+    ID3D12CommandList* command_lists[] = { m_command_list.Get() };
+    m_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
 
     return true;
 }
@@ -286,8 +277,8 @@ void RenderSystemDirectX12::EndRender()
 {
     // swap the back and front buffers
     // 交换前台与后台缓冲区
-    ThrowIfFailed(swap_chain_->Present(0, 0));
-    current_back_buffer_ = (current_back_buffer_ + 1) % kSwapChainBufferCount;
+    ThrowIfFailed(m_swap_chain->Present(0, 0));
+    m_current_back_buffer = (m_current_back_buffer + 1) % sc_swap_chain_buffer_count;
 
     // Wait until frame commands are complete.  This waiting is inefficient and is
     // done for simplicity.  Later we will show how to organize our rendering code
@@ -308,8 +299,8 @@ void RenderSystemDirectX12::CreateDevice()
     HRESULT hardware_result = D3D12CreateDevice
     (
         nullptr,                // default adapter
-        feature_level_,
-        IID_PPV_ARGS(&device_)
+        m_feature_level,
+        IID_PPV_ARGS(&m_device)
     );
 
     // Fallback to WARP device.
@@ -317,15 +308,15 @@ void RenderSystemDirectX12::CreateDevice()
     {
         ComPtr<IDXGIAdapter> warp_adapter;
 
-        ThrowIfFailed(factory_->EnumWarpAdapter(IID_PPV_ARGS(&warp_adapter)));
+        ThrowIfFailed(m_factory->EnumWarpAdapter(IID_PPV_ARGS(&warp_adapter)));
 
         ThrowIfFailed
         (
             D3D12CreateDevice
             (
                 warp_adapter.Get(),
-                feature_level_,
-                IID_PPV_ARGS(&device_)
+                m_feature_level,
+                IID_PPV_ARGS(&m_device)
             )
         );
     }
@@ -338,9 +329,9 @@ void RenderSystemDirectX12::CreateDevice()
 //--------------------------------------------------------------------------------
 void RenderSystemDirectX12::SaveDescriptorSize()
 {
-    rtv_descriptor_size_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    dsv_descriptor_size_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-    cbv_srv_uav_descriptor_size_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_rtv_descriptor_size = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_dsv_descriptor_size = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    m_cbv_srv_uav_descriptor_size = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
 //--------------------------------------------------------------------------------
@@ -355,14 +346,14 @@ void RenderSystemDirectX12::CheckMsaaQuality()
     // target formats, so we only need to check quality support.
 
     D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS quality_levels;
-    quality_levels.Format = back_buffer_format_;
+    quality_levels.Format = m_back_buffer_format;
     quality_levels.SampleCount = 4;
     quality_levels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
     quality_levels.NumQualityLevels = 0;
 
     ThrowIfFailed
     (
-        device_->CheckFeatureSupport
+        m_device->CheckFeatureSupport
         (
             D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
             &quality_levels,
@@ -370,8 +361,8 @@ void RenderSystemDirectX12::CheckMsaaQuality()
         )
     );
 
-    msaa_quality_ = quality_levels.NumQualityLevels;
-    assert(msaa_quality_ > 0 && "Unexpected MSAA quality level.");
+    m_msaa_quality = quality_levels.NumQualityLevels;
+    assert(m_msaa_quality > 0 && "Unexpected MSAA quality level.");
 }
 
 //--------------------------------------------------------------------------------
@@ -382,16 +373,16 @@ void RenderSystemDirectX12::CheckMsaaQuality()
 void RenderSystemDirectX12::CreateRtvAndDsvDescriptorHeaps()
 {
     D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc;
-    rtv_heap_desc.NumDescriptors = kSwapChainBufferCount;
+    rtv_heap_desc.NumDescriptors = sc_swap_chain_buffer_count;
     rtv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     rtv_heap_desc.NodeMask = 0;
     ThrowIfFailed
     (
-        device_->CreateDescriptorHeap
+        m_device->CreateDescriptorHeap
         (
             &rtv_heap_desc,
-            IID_PPV_ARGS(rtv_heap_.GetAddressOf())
+            IID_PPV_ARGS(m_rtv_heap.GetAddressOf())
         )
     );
 
@@ -402,10 +393,10 @@ void RenderSystemDirectX12::CreateRtvAndDsvDescriptorHeaps()
     dsv_heap_desc.NodeMask = 0;
     ThrowIfFailed
     (
-        device_->CreateDescriptorHeap
+        m_device->CreateDescriptorHeap
         (
             &dsv_heap_desc, 
-            IID_PPV_ARGS(dsv_heap_.GetAddressOf())
+            IID_PPV_ARGS(m_dsv_heap.GetAddressOf())
         )
     );
 }
@@ -420,33 +411,33 @@ void RenderSystemDirectX12::CreateCommandObjects()
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    ThrowIfFailed(device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&command_queue_)));
+    ThrowIfFailed(m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_command_queue)));
 
     ThrowIfFailed
     (
-        device_->CreateCommandAllocator
+        m_device->CreateCommandAllocator
         (
             D3D12_COMMAND_LIST_TYPE_DIRECT,
-            IID_PPV_ARGS(command_list_allocator_.GetAddressOf())
+            IID_PPV_ARGS(m_command_list_allocator.GetAddressOf())
         )
     );
 
     ThrowIfFailed
     (
-        device_->CreateCommandList
+        m_device->CreateCommandList
         (
             0,
             D3D12_COMMAND_LIST_TYPE_DIRECT,
-            command_list_allocator_.Get(), // Associated command allocator
+            m_command_list_allocator.Get(), // Associated command allocator
             nullptr, // Initial PipelineStateObject
-            IID_PPV_ARGS(command_list_.GetAddressOf())
+            IID_PPV_ARGS(m_command_list.GetAddressOf())
         )
     );
 
     // Start off in a closed state.  This is because the first time we refer 
     // to the command list we will Reset it, and it needs to be closed before
     // calling Reset.
-    command_list_->Close();
+    m_command_list->Close();
 }
 
 //--------------------------------------------------------------------------------
@@ -459,20 +450,20 @@ void RenderSystemDirectX12::CreateSwapChain()
     MainSystem& main_system = MainSystem::Instance();
 
     // Release the previous swapchain we will be recreating.
-    swap_chain_.Reset();
+    m_swap_chain.Reset();
 
     DXGI_SWAP_CHAIN_DESC swap_chain_desc;
     swap_chain_desc.BufferDesc.Width = main_system.Width();
     swap_chain_desc.BufferDesc.Height = main_system.Height();
     swap_chain_desc.BufferDesc.RefreshRate.Numerator = 60;
     swap_chain_desc.BufferDesc.RefreshRate.Denominator = 1;
-    swap_chain_desc.BufferDesc.Format = back_buffer_format_;
+    swap_chain_desc.BufferDesc.Format = m_back_buffer_format;
     swap_chain_desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
     swap_chain_desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-    swap_chain_desc.SampleDesc.Count = msaa_enable_ ? 4 : 1;
-    swap_chain_desc.SampleDesc.Quality = msaa_enable_ ? (msaa_quality_ - 1) : 0;
+    swap_chain_desc.SampleDesc.Count = m_msaa_enable ? 4 : 1;
+    swap_chain_desc.SampleDesc.Quality = m_msaa_enable ? (m_msaa_quality - 1) : 0;
     swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swap_chain_desc.BufferCount = kSwapChainBufferCount;
+    swap_chain_desc.BufferCount = sc_swap_chain_buffer_count;
     swap_chain_desc.OutputWindow = main_system.MainWindowHandle();
     swap_chain_desc.Windowed = true;
     swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -482,11 +473,11 @@ void RenderSystemDirectX12::CreateSwapChain()
     // swapchain需要通过commandqueue对其进行刷新
     ThrowIfFailed
     (
-        factory_->CreateSwapChain
+        m_factory->CreateSwapChain
         (
-            command_queue_.Get(),
+            m_command_queue.Get(),
             &swap_chain_desc,
-            swap_chain_.GetAddressOf()
+            m_swap_chain.GetAddressOf()
         )
     );
 }
@@ -499,20 +490,20 @@ void RenderSystemDirectX12::CreateSwapChain()
 void RenderSystemDirectX12::FlushCommandQueue()
 {
     // Advance the fence value to mark commands up to this fence point.
-    current_fence_++;
+    m_current_fence++;
 
     // Add an instruction to the command queue to set a new fence point.  Because we 
     // are on the GPU timeline, the new fence point won't be set until the GPU finishes
     // processing all the commands prior to this Signal().
-    ThrowIfFailed(command_queue_->Signal(fence_.Get(), current_fence_));
+    ThrowIfFailed(m_command_queue->Signal(m_fence.Get(), m_current_fence));
 
     // Wait until the GPU has completed commands up to this fence point.
-    if (fence_->GetCompletedValue() < current_fence_)
+    if (m_fence->GetCompletedValue() < m_current_fence)
     {
         HANDLE event_handle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
 
         // Fire event when GPU hits current fence.  
-        ThrowIfFailed(fence_->SetEventOnCompletion(current_fence_, event_handle));
+        ThrowIfFailed(m_fence->SetEventOnCompletion(m_current_fence, event_handle));
 
         // Wait until the GPU hits current fence event is fired.
         WaitForSingleObject(event_handle, INFINITE);
@@ -527,23 +518,23 @@ void RenderSystemDirectX12::FlushCommandQueue()
 //--------------------------------------------------------------------------------
 void RenderSystemDirectX12::CreateRenderTargetView()
 {
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_heap_handle(rtv_heap_->GetCPUDescriptorHandleForHeapStart());
-    for (UINT i = 0; i < kSwapChainBufferCount; i++)
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_heap_handle(m_rtv_heap->GetCPUDescriptorHandleForHeapStart());
+    for (UINT i = 0; i < sc_swap_chain_buffer_count; i++)
     {
         // 获得存于swapchain中的buffer
         ThrowIfFailed
         (
-            swap_chain_->GetBuffer
+            m_swap_chain->GetBuffer
             (
                 i, // 希望获得的特定backbuffer的index
-                IID_PPV_ARGS(&swap_chain_buffer_[i])
+                IID_PPV_ARGS(&m_swap_chain_buffer[i])
             )
         );
 
         // 为获取的backbuffer创建rtv
-        device_->CreateRenderTargetView
+        m_device->CreateRenderTargetView
         (
-            swap_chain_buffer_[i].Get(),
+            m_swap_chain_buffer[i].Get(),
             nullptr, // 指向D3D12_RENDER_TARGET_VIEW_DESC数据结构的pointer
                      // 如果该资源在创建时已指定了具体格式(not typeless)
                      // 那么就可以把这个参数设为nullptr，表示采用该资源创建时的格式
@@ -555,7 +546,7 @@ void RenderSystemDirectX12::CreateRenderTargetView()
         rtv_heap_handle.Offset
         (
             1,
-            rtv_descriptor_size_
+            m_rtv_descriptor_size
         );
     }
 }
@@ -581,26 +572,26 @@ void RenderSystemDirectX12::CreateDepthStencilBufferView(const UINT width, const
     //   2. DSV Format: DXGI_FORMAT_D24_UNORM_S8_UINT
     // we need to create the depth buffer resource with a typeless format.  
     depth_stencil_desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-    depth_stencil_desc.SampleDesc.Count = msaa_enable_ ? 4 : 1;
-    depth_stencil_desc.SampleDesc.Quality = msaa_enable_ ? (msaa_quality_ - 1) : 0;
+    depth_stencil_desc.SampleDesc.Count = m_msaa_enable ? 4 : 1;
+    depth_stencil_desc.SampleDesc.Quality = m_msaa_enable ? (m_msaa_quality - 1) : 0;
     depth_stencil_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     depth_stencil_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
     D3D12_CLEAR_VALUE opt_clear;
-    opt_clear.Format = depth_stencil_format_;
+    opt_clear.Format = m_depth_stencil_format;
     opt_clear.DepthStencil.Depth = 1.0f;
     opt_clear.DepthStencil.Stencil = 0;
 
     ThrowIfFailed
     (
-        device_->CreateCommittedResource
+        m_device->CreateCommittedResource
         (
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
             D3D12_HEAP_FLAG_NONE,
             &depth_stencil_desc,
             D3D12_RESOURCE_STATE_COMMON,
             &opt_clear,
-            IID_PPV_ARGS(depth_stencil_buffer_.GetAddressOf())
+            IID_PPV_ARGS(m_depth_stencil_buffer.GetAddressOf())
         )
     );
 
@@ -608,11 +599,11 @@ void RenderSystemDirectX12::CreateDepthStencilBufferView(const UINT width, const
     D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc;
     dsv_desc.Flags = D3D12_DSV_FLAG_NONE;
     dsv_desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-    dsv_desc.Format = depth_stencil_format_;
+    dsv_desc.Format = m_depth_stencil_format;
     dsv_desc.Texture2D.MipSlice = 0;
-    device_->CreateDepthStencilView
+    m_device->CreateDepthStencilView
     (
-        depth_stencil_buffer_.Get(),
+        m_depth_stencil_buffer.Get(),
         &dsv_desc,
         DepthStencilView()
     );
@@ -620,10 +611,10 @@ void RenderSystemDirectX12::CreateDepthStencilBufferView(const UINT width, const
     // Transition the resource from its initial state to be used as a depth buffer.
     // 将资源从初始状态转换为深度缓冲区
     // 资源转换，防止资源冒险(resource hazard) 书p100
-    command_list_->ResourceBarrier
+    m_command_list->ResourceBarrier
     (
         1,
-        &CD3DX12_RESOURCE_BARRIER::Transition(depth_stencil_buffer_.Get(),
+        &CD3DX12_RESOURCE_BARRIER::Transition(m_depth_stencil_buffer.Get(),
             D3D12_RESOURCE_STATE_COMMON,
             D3D12_RESOURCE_STATE_DEPTH_WRITE)
     );
@@ -641,7 +632,7 @@ void RenderSystemDirectX12::CreateDepthStencilBufferView(const UINT width, const
 //--------------------------------------------------------------------------------
 ID3D12Resource* RenderSystemDirectX12::CurrentBackBuffer() const
 {
-    return swap_chain_buffer_[current_back_buffer_].Get();
+    return m_swap_chain_buffer[m_current_back_buffer].Get();
 }
 
 //--------------------------------------------------------------------------------
@@ -659,9 +650,9 @@ D3D12_CPU_DESCRIPTOR_HANDLE RenderSystemDirectX12::CurrentBackBufferView() const
     // 根据给定的偏移量找到当前后台缓冲区的RTV
     return CD3DX12_CPU_DESCRIPTOR_HANDLE
     (
-        rtv_heap_->GetCPUDescriptorHandleForHeapStart(), // heap中的首个handle
-        current_back_buffer_,
-        rtv_descriptor_size_
+        m_rtv_heap->GetCPUDescriptorHandleForHeapStart(), // heap中的首个handle
+        m_current_back_buffer,
+        m_rtv_descriptor_size
     );
 }
 
@@ -677,5 +668,5 @@ D3D12_CPU_DESCRIPTOR_HANDLE RenderSystemDirectX12::CurrentBackBufferView() const
 //--------------------------------------------------------------------------------
 D3D12_CPU_DESCRIPTOR_HANDLE RenderSystemDirectX12::DepthStencilView() const
 {
-    return dsv_heap_->GetCPUDescriptorHandleForHeapStart();
+    return m_dsv_heap->GetCPUDescriptorHandleForHeapStart();
 }

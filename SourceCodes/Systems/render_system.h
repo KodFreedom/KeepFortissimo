@@ -14,8 +14,9 @@
 
 namespace KeepFortissimo
 {
-    enum RenderApiType
+    enum class RenderApiType : u32
     {
+        kInvalid,
         kDirectX12,
     };
 
@@ -24,6 +25,22 @@ namespace KeepFortissimo
         friend class Singleton<RenderSystem>;
 
     public:
+        //--------------------------------------------------------------------------------
+        //  Create the instance and initialize it
+        //  Arguments :
+        //  Return：true when succeeded, else false
+        //--------------------------------------------------------------------------------
+        //  インスタンスの生成と初期化処理
+        //  引数 :
+        //  戻り値：成功したらtrue、失敗したらfalse
+        //--------------------------------------------------------------------------------
+        //  生成实体并初始化
+        //  参数 :
+        //  返回值：成功则返回true、反之返回false
+        //--------------------------------------------------------------------------------
+        static bool StartUp() = delete;
+        static bool StartUp(const RenderApiType type);
+
         //--------------------------------------------------------------------------------
         //  Render all registered components
         //  Arguments :
@@ -52,7 +69,7 @@ namespace KeepFortissimo
         //  参数 :
         //  返回值：
         //--------------------------------------------------------------------------------
-        virtual void OnResize() = 0;
+        virtual void OnResize() {};
 
         //--------------------------------------------------------------------------------
         //  Get if enabled MSAA
@@ -67,7 +84,7 @@ namespace KeepFortissimo
         //  参数 :
         //  返回值：使用则返回true、反之返回false
         //--------------------------------------------------------------------------------
-        bool GetMsaaEnable() const { return msaa_enable_; }
+        bool GetMsaaEnable() const { return m_msaa_enable; }
 
         //--------------------------------------------------------------------------------
         //  Set if enabled MSAA
@@ -97,7 +114,7 @@ namespace KeepFortissimo
         //  参数 :
         //  返回值：RenderApiType
         //--------------------------------------------------------------------------------
-        RenderApiType GetRenderApiType() const { return api_type_; }
+        RenderApiType GetRenderApiType() const { return m_api_type; }
 
     protected:
         //--------------------------------------------------------------------------------
@@ -128,35 +145,35 @@ namespace KeepFortissimo
         //  初期化処理
         //  初始化
         //--------------------------------------------------------------------------------
-        virtual bool Initialize() override = 0;
+        virtual bool Initialize() override { return true; };
 
         //--------------------------------------------------------------------------------
         //  Uninit the instance
         //  インスタンスの終了処理
         //  终了处理
         //--------------------------------------------------------------------------------
-        virtual void Uninitialize() override = 0;
+        virtual void Uninitialize() override {};
 
         //--------------------------------------------------------------------------------
         //  Prepare for render components
         //  描画する前の準備
         //  渲染前的准备工作
         //--------------------------------------------------------------------------------
-        virtual bool PrepareRender() = 0;
+        virtual bool PrepareRender() { return true; };
 
         //--------------------------------------------------------------------------------
         //  End render and present the buffers 
         //  描画終了、バッファの切り替え
         //  渲染完成并交换画面缓存
         //--------------------------------------------------------------------------------
-        virtual void EndRender() = 0;
+        virtual void EndRender() {};
 
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
         //--------------------------------------------------------------------------------
-        bool                 msaa_enable_;
-        UINT                 msaa_quality_;
-        DirectX::XMVECTORF32 background_color_;
-        RenderApiType        api_type_;
+        bool                 m_msaa_enable = false;
+        u32                  m_msaa_quality = 0;
+        DirectX::XMVECTORF32 m_background_color = DirectX::Colors::Yellow;
+        RenderApiType        m_api_type = RenderApiType::kInvalid;
     };
 }

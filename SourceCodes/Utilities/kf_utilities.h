@@ -35,19 +35,19 @@ namespace KeepFortissimo
         //         file_name
         //         line_number
         //--------------------------------------------------------------------------------
-        Exception(HRESULT error_code, const String& function_name, const String& file_name, int line_number);
+        Exception(HRESULT error_code, const t_string& function_name, const t_string& file_name, int line_number);
 
         //--------------------------------------------------------------------------------
         //  Show exception in string
-        //  Return：String
+        //  Return：t_string
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  例外メッセージの表示
-        //  戻り値：String
+        //  戻り値：t_string
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  表示错误信息
-        //  返回值：String
+        //  返回值：t_string
         //--------------------------------------------------------------------------------
-        String ToString() const;
+        t_string ToString() const;
 
     private:
         //--------------------------------------------------------------------------------
@@ -61,31 +61,31 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
         //--------------------------------------------------------------------------------
-        HRESULT error_code_;
-        String  function_name_;
-        String  file_name_;
-        int     line_number_;
+        HRESULT  m_error_code;
+        t_string m_function_name;
+        t_string m_file_name;
+        int      m_line_number;
     };
 
     //--------------------------------------------------------------------------------
     //  Change ansi to string(multibyte)/wstring(unicode)
     //  Arguments : value : string for change
-    //  Return：String
+    //  Return：t_string
     //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     //  ansiをstring(multibyte)/wstring(unicode)に変換する
     //  引数 : value : 転換する内容
-    //  戻り値：String
+    //  戻り値：t_string
     //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     //  将ansi转换为string(multibyte)/wstring(unicode)
     //  参数 : value : 转换对象
-    //  返回值：String
+    //  返回值：t_string
     //--------------------------------------------------------------------------------
-    inline String AnsiToString(const std::string& value)
+    inline t_string AnsiToString(const std::string& value)
     {
 #ifdef UNICODE
         WCHAR buffer[512];
         MultiByteToWideChar(CP_ACP, 0, value.c_str(), -1, buffer, 512);
-        return String(buffer);
+        return t_string(buffer);
 #else
         return value;
 #endif // !UNICODE
@@ -95,7 +95,7 @@ namespace KeepFortissimo
 #define ThrowIfFailed(x)                                                        \
 {                                                                               \
     HRESULT hresult = (x);                                                      \
-    const String& file_name = AnsiToString(__FILE__);                           \
+    const t_string& file_name = AnsiToString(__FILE__);                         \
     if(FAILED(hresult)) { throw Exception(hresult, L#x, file_name, __LINE__); } \
 }
 #endif

@@ -23,10 +23,13 @@
 //  共通定义
 //--------------------------------------------------------------------------------
 #ifdef UNICODE
-typedef std::wstring String;
+typedef std::wstring t_string;
 #else
-typedef std::string String;
+typedef std::string t_string;
 #endif // !UNICODE
+
+typedef unsigned int u32;
+typedef unsigned long long u64;
 
 #define MY_NEW new
 #define MY_DELETE delete

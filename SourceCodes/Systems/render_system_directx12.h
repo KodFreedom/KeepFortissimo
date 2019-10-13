@@ -22,19 +22,9 @@ namespace KeepFortissimo
 {
     class RenderSystemDirectX12 : public RenderSystem
     {
-    public:
-        //--------------------------------------------------------------------------------
-        //  Create the instance and initialize it
-        //  Return：true when succeeded, else false
-        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        //  インスタンスの生成と初期化処理
-        //  戻り値：成功したらtrue、失敗したらfalse
-        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        //  生成实体并初始化
-        //  返回值：成功则返回true、反之返回false
-        //--------------------------------------------------------------------------------
-        static bool StartUp();
+        friend class RenderSystem;
 
+    public:
         //--------------------------------------------------------------------------------
         //  Called when changed window size
         //  ウインドウサイズ変わった時に呼ばれる
@@ -180,39 +170,39 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  const variable / 定数 / 定量
         //--------------------------------------------------------------------------------
-        static constexpr int kSwapChainBufferCount = 2;
+        static constexpr u32 sc_swap_chain_buffer_count = 2;
 
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
         //--------------------------------------------------------------------------------
-        Microsoft::WRL::ComPtr<IDXGIFactory4>  factory_;
-        Microsoft::WRL::ComPtr<IDXGISwapChain> swap_chain_;
-        Microsoft::WRL::ComPtr<ID3D12Device>   device_;
+        Microsoft::WRL::ComPtr<IDXGIFactory4>  m_factory;
+        Microsoft::WRL::ComPtr<IDXGISwapChain> m_swap_chain;
+        Microsoft::WRL::ComPtr<ID3D12Device>   m_device;
 
-        Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
-        UINT64 current_fence_;
+        Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
+        u64 m_current_fence = 0;
 
-        Microsoft::WRL::ComPtr<ID3D12CommandQueue>        command_queue_;
-        Microsoft::WRL::ComPtr<ID3D12CommandAllocator>    command_list_allocator_;
-        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> command_list_;
+        Microsoft::WRL::ComPtr<ID3D12CommandQueue>        m_command_queue;
+        Microsoft::WRL::ComPtr<ID3D12CommandAllocator>    m_command_list_allocator;
+        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_command_list;
 
-        int current_back_buffer_;
-        Microsoft::WRL::ComPtr<ID3D12Resource> swap_chain_buffer_[kSwapChainBufferCount];
-        Microsoft::WRL::ComPtr<ID3D12Resource> depth_stencil_buffer_;
+        u32 m_current_back_buffer = 0;
+        Microsoft::WRL::ComPtr<ID3D12Resource> m_swap_chain_buffer[sc_swap_chain_buffer_count];
+        Microsoft::WRL::ComPtr<ID3D12Resource> m_depth_stencil_buffer;
 
-        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtv_heap_;
-        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsv_heap_;
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtv_heap;
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dsv_heap;
 
-        D3D12_VIEWPORT screen_viewport_;
-        D3D12_RECT     scissor_rect_;
+        D3D12_VIEWPORT m_screen_viewport = {};
+        D3D12_RECT     m_scissor_rect = {};
 
-        UINT rtv_descriptor_size_;
-        UINT dsv_descriptor_size_;
-        UINT cbv_srv_uav_descriptor_size_;
+        u32 m_rtv_descriptor_size = 0;
+        u32 m_dsv_descriptor_size = 0;
+        u32 m_cbv_srv_uav_descriptor_size = 0;
 
-        D3D_DRIVER_TYPE   driver_type_;
-        DXGI_FORMAT       back_buffer_format_;
-        DXGI_FORMAT       depth_stencil_format_;
-        D3D_FEATURE_LEVEL feature_level_;
+        D3D_DRIVER_TYPE   m_driver_type = D3D_DRIVER_TYPE_HARDWARE;
+        DXGI_FORMAT       m_back_buffer_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        DXGI_FORMAT       m_depth_stencil_format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        D3D_FEATURE_LEVEL m_feature_level = D3D_FEATURE_LEVEL_12_1;
     };
 }
