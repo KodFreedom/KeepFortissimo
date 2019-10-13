@@ -86,5 +86,11 @@
     <ClInclude Include="SourceCodes\Libraries\DirectX12\d3dx12.h">
       <Filter>ヘッダー ファイル\Libraries\DirectX12</Filter>
     </ClInclude>
+    <ClInclude Include="SourceCodes\Components\component.h">
+      <Filter>ヘッダー ファイル\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Components\collider.h">
+      <Filter>ヘッダー ファイル\Components</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
