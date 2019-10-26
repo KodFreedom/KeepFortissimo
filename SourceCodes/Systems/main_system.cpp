@@ -10,7 +10,7 @@
 #include "main_system.h"
 #include "game_timer.h"
 #include "../Utilities/kf_labels.h"
-#include "render_system.h"
+#include "RenderSystem/render_system.h"
 using namespace KeepFortissimo;
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)

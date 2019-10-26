@@ -11,92 +11,63 @@
 #include <Windows.h>
 #include "../Systems/system_setting.h"
 
+//--------------------------------------------------------------------------------
+// マクロ
+#define SAFE_DELETE(p) if(p){ MY_DELETE p; p = nullptr; }
+
 namespace KeepFortissimo
 {
-    class Exception
+    class Utility
     {
     public:
         //--------------------------------------------------------------------------------
-        //  Constractor of Exception
-        //  Arguments : error_code
-        //              function_name
-        //              file_name
-        //              line_number
-        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        //  例外クラスのコンストラクタ
-        //  引数 : error_code
-        //         function_name
-        //         file_name
-        //         line_number
-        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        //  错误信息的构造函数
-        //  参数 : error_code
-        //         function_name
-        //         file_name
-        //         line_number
-        //--------------------------------------------------------------------------------
-        Exception(HRESULT error_code, const t_string& function_name, const t_string& file_name, int line_number);
-
-        //--------------------------------------------------------------------------------
-        //  Show exception in string
+        //  Change ansi to string(multibyte)/wstring(unicode)
+        //  Arguments : value : string for change
         //  Return：t_string
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        //  例外メッセージの表示
+        //  ansiをstring(multibyte)/wstring(unicode)に変換する
+        //  引数 : value : 転換する内容
         //  戻り値：t_string
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        //  表示错误信息
+        //  将ansi转换为string(multibyte)/wstring(unicode)
+        //  参数 : value : 转换对象
         //  返回值：t_string
         //--------------------------------------------------------------------------------
-        t_string ToString() const;
+        inline static t_string AnsiToString(const std::string& value)
+        {
+#ifdef UNICODE
+            WCHAR buffer[512];
+            MultiByteToWideChar(CP_ACP, 0, value.c_str(), -1, buffer, 512);
+            return t_string(buffer);
+#else
+            return value;
+#endif // !UNICODE
+        }
+
+        //--------------------------------------------------------------------------------
+        //  Calculate constant buffer byte size to multiple of 256
+        //  Arguments : value : byte_size
+        //  Return：u32
+        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        //  コンスタントバッファサイズを256の倍数に変更
+        //  引数 : value : byte_size
+        //  戻り値：u32
+        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        //  将常量缓冲区的大小转换为256的倍数
+        //  参数 : value : byte_size
+        //  返回值：u32
+        //--------------------------------------------------------------------------------
+        inline static u32 CalculateConstantBufferByteSize(u32 byte_size)
+        {
+            // 常量缓冲区的大小必须是硬件最小分配空间的整数倍（通常是256b）
+            // 为此要将其凑整为满足需求的最小的256的整数倍。我们现在通过输入值bytesize加上255，
+            // 在屏蔽求和结果的低2字节（及计算结果中小于256的数据部分）来实现这一点
+            return (byte_size + 255) & ~255;
+        }
 
     private:
-        //--------------------------------------------------------------------------------
-        //  delete the copy constructor and operator
-        //  コピーコンストラクタとオペレーターの削除
-        //  删除复制用构造函数与等号
-        //--------------------------------------------------------------------------------
-        Exception() = delete;
-        void operator=(Exception const&) = delete;
-
-        //--------------------------------------------------------------------------------
-        //  variable / 変数 / 变量
-        //--------------------------------------------------------------------------------
-        HRESULT  m_error_code;
-        t_string m_function_name;
-        t_string m_file_name;
-        int      m_line_number;
+        Utility() = delete;
+        Utility(const Utility& rhs) = delete;
+        Utility& operator=(const Utility& rhs) = delete;
     };
-
-    //--------------------------------------------------------------------------------
-    //  Change ansi to string(multibyte)/wstring(unicode)
-    //  Arguments : value : string for change
-    //  Return：t_string
-    //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    //  ansiをstring(multibyte)/wstring(unicode)に変換する
-    //  引数 : value : 転換する内容
-    //  戻り値：t_string
-    //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    //  将ansi转换为string(multibyte)/wstring(unicode)
-    //  参数 : value : 转换对象
-    //  返回值：t_string
-    //--------------------------------------------------------------------------------
-    inline t_string AnsiToString(const std::string& value)
-    {
-#ifdef UNICODE
-        WCHAR buffer[512];
-        MultiByteToWideChar(CP_ACP, 0, value.c_str(), -1, buffer, 512);
-        return t_string(buffer);
-#else
-        return value;
-#endif // !UNICODE
-    }
-
-#ifndef ThrowIfFailed
-#define ThrowIfFailed(x)                                                        \
-{                                                                               \
-    HRESULT hresult = (x);                                                      \
-    const t_string& file_name = AnsiToString(__FILE__);                         \
-    if(FAILED(hresult)) { throw Exception(hresult, L#x, file_name, __LINE__); } \
-}
-#endif
 }

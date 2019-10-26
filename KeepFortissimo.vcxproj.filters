@@ -37,6 +37,12 @@
     <Filter Include="ヘッダー ファイル\Libraries\DirectX12">
       <UniqueIdentifier>{184f9609-55c3-4768-a3ab-1e0ec4f3227d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Systems\RenderSystem">
+      <UniqueIdentifier>{6c929b70-d31f-410d-81a3-642923d7cf41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Systems\RenderSystem">
+      <UniqueIdentifier>{8f5191af-c554-4ae6-8393-a84917191e5e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SourceCodes\main.cpp">
@@ -48,14 +54,17 @@
     <ClCompile Include="SourceCodes\Systems\game_timer.cpp">
       <Filter>ソース ファイル\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="SourceCodes\Systems\render_system.cpp">
-      <Filter>ソース ファイル\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="SourceCodes\Systems\render_system_directx12.cpp">
-      <Filter>ソース ファイル\Systems</Filter>
-    </ClCompile>
     <ClCompile Include="SourceCodes\Utilities\kf_utilities.cpp">
       <Filter>ソース ファイル\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Utilities\exception.cpp">
+      <Filter>ソース ファイル\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\render_system.cpp">
+      <Filter>ソース ファイル\Systems\RenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\render_system_directx12.cpp">
+      <Filter>ソース ファイル\Systems\RenderSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,12 +86,6 @@
     <ClInclude Include="SourceCodes\Systems\game_timer.h">
       <Filter>ヘッダー ファイル\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="SourceCodes\Systems\render_system.h">
-      <Filter>ヘッダー ファイル\Systems</Filter>
-    </ClInclude>
-    <ClInclude Include="SourceCodes\Systems\render_system_directx12.h">
-      <Filter>ヘッダー ファイル\Systems</Filter>
-    </ClInclude>
     <ClInclude Include="SourceCodes\Libraries\DirectX12\d3dx12.h">
       <Filter>ヘッダー ファイル\Libraries\DirectX12</Filter>
     </ClInclude>
@@ -91,6 +94,24 @@
     </ClInclude>
     <ClInclude Include="SourceCodes\Components\collider.h">
       <Filter>ヘッダー ファイル\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Utilities\exception.h">
+      <Filter>ヘッダー ファイル\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\render_system.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\render_system_directx12.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\shader_define.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\upload_buffer.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\mesh_geometry.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
