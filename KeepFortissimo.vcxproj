@@ -33,6 +33,7 @@
     <ClInclude Include="SourceCodes\Libraries\DirectX12\d3dx12.h" />
     <ClInclude Include="SourceCodes\Systems\game_timer.h" />
     <ClInclude Include="SourceCodes\Systems\main_system.h" />
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\frame_resource.h" />
     <ClInclude Include="SourceCodes\Systems\RenderSystem\mesh_geometry.h" />
     <ClInclude Include="SourceCodes\Systems\RenderSystem\render_system.h" />
     <ClInclude Include="SourceCodes\Systems\RenderSystem\render_system_directx12.h" />

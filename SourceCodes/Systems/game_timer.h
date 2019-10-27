@@ -67,6 +67,18 @@ namespace KeepFortissimo
         float ScaledDeltaTime() const { return m_scaled_delta_time; }
 
         //--------------------------------------------------------------------------------
+        //  Get frames per second
+        //  Return：fps(float)
+        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        //  fpsの取得
+        //  戻り値：fps(float)
+        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        //  取得fps
+        //  返回值：fps(float)
+        //--------------------------------------------------------------------------------
+        float Fps() const { return m_fps; }
+
+        //--------------------------------------------------------------------------------
         //  Set the fps limit (unlimited if 0)
         //  Arguments : fps limit(u32)
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -145,6 +157,7 @@ namespace KeepFortissimo
         float         m_time_scale = 0.0f;
         float         m_scaled_delta_time = 0.0f;
         float         m_time_interval = 0.0f;
+        float         m_fps = 0.0f;
         u32           m_fps_limit = 0;
     };
 }

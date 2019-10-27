@@ -113,5 +113,8 @@
     <ClInclude Include="SourceCodes\Systems\RenderSystem\mesh_geometry.h">
       <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
     </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\frame_resource.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

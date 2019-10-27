@@ -292,7 +292,7 @@ bool MainSystem::InitializeWindow()
 //--------------------------------------------------------------------------------
 void MainSystem::Update()
 {
-
+    UpdateWindowText();
 }
 
 //--------------------------------------------------------------------------------
@@ -418,4 +418,19 @@ void MainSystem::OnWmKeyUp(WPARAM wparam, LPARAM lparam)
     //{
     //    if (render_system_) render_system_->SetMsaaState(!render_system_->GetMsaaState());
     //}
+}
+
+//--------------------------------------------------------------------------------
+//  Update the window test
+//  window text更新
+//  更新窗口标题
+//--------------------------------------------------------------------------------
+void MainSystem::UpdateWindowText()
+{
+    // 全屏的时候不更新
+    if (m_fullscreen_state) return;
+
+    std::wstring text = kWindowName;
+    text += L" FPS : " + std::to_wstring(GameTimer::Instance().Fps());
+    SetWindowTextW(m_main_window_handle, text.c_str());
 }

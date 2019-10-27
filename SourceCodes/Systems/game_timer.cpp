@@ -46,6 +46,8 @@ void GameTimer::Tick()
 
     m_scaled_delta_time = m_delta_time * m_time_scale
         * static_cast<float>(MainSystem::Instance().Paused() ^ 1);
+
+    m_fps = m_delta_time > 0.0f ? 1.0f / m_delta_time : 0.0f;
 }
 
 //--------------------------------------------------------------------------------
