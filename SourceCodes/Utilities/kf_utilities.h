@@ -11,10 +11,6 @@
 #include <Windows.h>
 #include "../Systems/system_setting.h"
 
-//--------------------------------------------------------------------------------
-// マクロ
-#define SAFE_DELETE(p) if(p){ MY_DELETE p; p = nullptr; }
-
 namespace KeepFortissimo
 {
     class Utility

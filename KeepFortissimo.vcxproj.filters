@@ -66,6 +66,12 @@
     <ClCompile Include="SourceCodes\Systems\RenderSystem\render_system_directx12.cpp">
       <Filter>ソース ファイル\Systems\RenderSystem</Filter>
     </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\frame_resource.cpp">
+      <Filter>ソース ファイル\Systems\RenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\mesh_generator.cpp">
+      <Filter>ソース ファイル\Systems\RenderSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SourceCodes\Utilities\kf_utilities.h">
@@ -104,9 +110,6 @@
     <ClInclude Include="SourceCodes\Systems\RenderSystem\render_system_directx12.h">
       <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
     </ClInclude>
-    <ClInclude Include="SourceCodes\Systems\RenderSystem\shader_define.h">
-      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
-    </ClInclude>
     <ClInclude Include="SourceCodes\Systems\RenderSystem\upload_buffer.h">
       <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
     </ClInclude>
@@ -114,6 +117,12 @@
       <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
     </ClInclude>
     <ClInclude Include="SourceCodes\Systems\RenderSystem\frame_resource.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\render_define.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\mesh_generator.h">
       <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
     </ClInclude>
   </ItemGroup>

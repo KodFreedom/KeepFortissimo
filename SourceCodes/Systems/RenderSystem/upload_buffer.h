@@ -13,6 +13,7 @@
 #include "../system_setting.h"
 #include "../../Utilities/kf_utilities.h"
 #include "../../Utilities/exception.h"
+#include "../../Libraries/DirectX12/d3dx12.h"
 using Microsoft::WRL::ComPtr;
 
 namespace KeepFortissimo

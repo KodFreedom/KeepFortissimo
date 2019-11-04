@@ -8,7 +8,10 @@
 //  Email  : kodfreedom@gmail.com
 //--------------------------------------------------------------------------------
 #include "render_system_directx12.h"
+#include "frame_resource.h"
+#include "mesh_generator.h"
 #include "../main_system.h"
+#include "../game_timer.h"
 #include "../../Utilities/kf_utilities.h"
 #include "../../Utilities/exception.h"
 #include "../../Libraries/DirectX12/d3dx12.h"
@@ -27,6 +30,16 @@ using namespace std;
 //
 //--------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------
+//  Render
+//--------------------------------------------------------------------------------
+void RenderSystemDirectX12::Render()
+{
+    UpdateTest();
+    DrawTest();
+    UpdateFrameResource();
+}
+
+//--------------------------------------------------------------------------------
 //  OnResize
 //--------------------------------------------------------------------------------
 void RenderSystemDirectX12::OnResize()
@@ -35,8 +48,8 @@ void RenderSystemDirectX12::OnResize()
     assert(m_swap_chain);
     assert(m_command_list_allocator);
 
-    UINT width = MainSystem::Instance().Width();
-    UINT height = MainSystem::Instance().Height();
+    u32 width = MainSystem::Instance().Width();
+    u32 height = MainSystem::Instance().Height();
 
     // Flush before changing any resources.
     FlushCommandQueue();
@@ -140,7 +153,7 @@ bool RenderSystemDirectX12::Initialize()
     CreateSwapChain();
     CreateRtvAndDsvDescriptorHeaps();
     OnResize();
-    InitBox();
+    InitTest();
     return true;
 }
 
@@ -151,141 +164,145 @@ bool RenderSystemDirectX12::Initialize()
 //--------------------------------------------------------------------------------
 void RenderSystemDirectX12::Uninitialize()
 {
-    UninitBox();
+    for (u32 i = 0; i < sc_num_frame_resources; ++i)
+    {
+        SAFE_DELETE(m_frame_resources[i]);
+    }
+    UninitTest();
 }
 
-//--------------------------------------------------------------------------------
-//  Prepare for render components
-//  Return：true when succeeded, else false
-//ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-//  描画する前の準備
-//  戻り値：成功したらtrue、失敗したらfalse
-//ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-//  渲染前的准备工作
-//  返回值：成功则返回true、反之返回false
-//--------------------------------------------------------------------------------
-bool RenderSystemDirectX12::PrepareRender()
-{
-    //// Reuse the memory associated with command recording.
-    //// We can only reset when the associated command lists have finished execution on the GPU.
-    //// 重复使用记录命令的相关内存
-    //// 只有当与GPU关联的命令列表执行完成时，才能将其重置
-    //ThrowIfFailed(m_command_list_allocator->Reset());
-
-    //// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-    //// Reusing the command list reuses memory.
-    //// 将通过ExecuteCommandList方法将某个命令列表加入命令队列后，便可重置该命令
-    //// 以此来复用命令列表及其内存
-    //ThrowIfFailed
-    //(
-    //    m_command_list->Reset
-    //    (
-    //        m_command_list_allocator.Get(),
-    //        nullptr
-    //    )
-    //);
-
-    //// Indicate a state transition on the resource usage.
-    //// 对资源的状态进行转换，将资源从呈现状态转换为渲染目标状态
-    //m_command_list->ResourceBarrier
-    //(
-    //    1,
-    //    &CD3DX12_RESOURCE_BARRIER::Transition
-    //    (
-    //        CurrentBackBuffer(),
-    //        D3D12_RESOURCE_STATE_PRESENT,
-    //        D3D12_RESOURCE_STATE_RENDER_TARGET
-    //    )
-    //);
-
-    //// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
-    //// 设置视口和裁剪矩形，它们需要随着命令列表的重置而重置
-    //m_command_list->RSSetViewports
-    //(
-    //    1, 
-    //    &m_screen_viewport
-    //);
-
-    //m_command_list->RSSetScissorRects
-    //(
-    //    1,
-    //    &m_scissor_rect
-    //);
-
-    //// Clear the back buffer and depth buffer.
-    //// 清除后台缓冲区和深度缓冲区
-    //m_command_list->ClearRenderTargetView
-    //(
-    //    CurrentBackBufferView(),
-    //    m_background_color, 
-    //    0, 
-    //    nullptr
-    //);
-
-    //m_command_list->ClearDepthStencilView
-    //(
-    //    DepthStencilView(),
-    //    D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
-    //    1.0f,
-    //    0,
-    //    0,
-    //    nullptr
-    //);
-
-    //// Specify the buffers we are going to render to.
-    //// 指定将要渲染的缓冲区
-    //m_command_list->OMSetRenderTargets
-    //(
-    //    1, 
-    //    &CurrentBackBufferView(),
-    //    true,
-    //    &DepthStencilView()
-    //);
-
-    //// Indicate a state transition on the resource usage.
-    //// 再次对资源状态进行转换，将资源从渲染目标状态转换回呈现状态
-    //m_command_list->ResourceBarrier
-    //(
-    //    1, 
-    //    &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-    //    D3D12_RESOURCE_STATE_RENDER_TARGET, 
-    //    D3D12_RESOURCE_STATE_PRESENT)
-    //);
-
-    //// Done recording commands.
-    //// 完成命令记录
-    //ThrowIfFailed(m_command_list->Close());
-
-    //// Add the command list to the queue for execution.
-    //// 将待执行的命令列表加入命令队列
-    //ID3D12CommandList* command_lists[] = { m_command_list.Get() };
-    //m_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
-
-    UpdateBox();
-    DrawBox();
-
-    return true;
-}
-
-//--------------------------------------------------------------------------------
-//  End render and present the buffers 
-//  描画終了、バッファの切り替え
-//  渲染完成并交换画面缓存
-//--------------------------------------------------------------------------------
-void RenderSystemDirectX12::EndRender()
-{
-    //// swap the back and front buffers
-    //// 交换前台与后台缓冲区
-    //ThrowIfFailed(m_swap_chain->Present(0, 0));
-    //m_current_back_buffer = (m_current_back_buffer + 1) % sc_swap_chain_buffer_count;
-
-    //// Wait until frame commands are complete.  This waiting is inefficient and is
-    //// done for simplicity.  Later we will show how to organize our rendering code
-    //// so we do not have to wait per frame.
-    //// 等待此前的命令执行完毕，当前的实现没有什么效果，也过于简单
-    //// 在后面将重新组织渲染部分的代码，以免在每一帧都要等待
-    //FlushCommandQueue();
-}
+////--------------------------------------------------------------------------------
+////  Prepare for render components
+////  Return：true when succeeded, else false
+////ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+////  描画する前の準備
+////  戻り値：成功したらtrue、失敗したらfalse
+////ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+////  渲染前的准备工作
+////  返回值：成功则返回true、反之返回false
+////--------------------------------------------------------------------------------
+//bool RenderSystemDirectX12::PrepareRender()
+//{
+//    //// Reuse the memory associated with command recording.
+//    //// We can only reset when the associated command lists have finished execution on the GPU.
+//    //// 重复使用记录命令的相关内存
+//    //// 只有当与GPU关联的命令列表执行完成时，才能将其重置
+//    //ThrowIfFailed(m_command_list_allocator->Reset());
+//
+//    //// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
+//    //// Reusing the command list reuses memory.
+//    //// 将通过ExecuteCommandList方法将某个命令列表加入命令队列后，便可重置该命令
+//    //// 以此来复用命令列表及其内存
+//    //ThrowIfFailed
+//    //(
+//    //    m_command_list->Reset
+//    //    (
+//    //        m_command_list_allocator.Get(),
+//    //        nullptr
+//    //    )
+//    //);
+//
+//    //// Indicate a state transition on the resource usage.
+//    //// 对资源的状态进行转换，将资源从呈现状态转换为渲染目标状态
+//    //m_command_list->ResourceBarrier
+//    //(
+//    //    1,
+//    //    &CD3DX12_RESOURCE_BARRIER::Transition
+//    //    (
+//    //        CurrentBackBuffer(),
+//    //        D3D12_RESOURCE_STATE_PRESENT,
+//    //        D3D12_RESOURCE_STATE_RENDER_TARGET
+//    //    )
+//    //);
+//
+//    //// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
+//    //// 设置视口和裁剪矩形，它们需要随着命令列表的重置而重置
+//    //m_command_list->RSSetViewports
+//    //(
+//    //    1, 
+//    //    &m_screen_viewport
+//    //);
+//
+//    //m_command_list->RSSetScissorRects
+//    //(
+//    //    1,
+//    //    &m_scissor_rect
+//    //);
+//
+//    //// Clear the back buffer and depth buffer.
+//    //// 清除后台缓冲区和深度缓冲区
+//    //m_command_list->ClearRenderTargetView
+//    //(
+//    //    CurrentBackBufferView(),
+//    //    m_background_color, 
+//    //    0, 
+//    //    nullptr
+//    //);
+//
+//    //m_command_list->ClearDepthStencilView
+//    //(
+//    //    DepthStencilView(),
+//    //    D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+//    //    1.0f,
+//    //    0,
+//    //    0,
+//    //    nullptr
+//    //);
+//
+//    //// Specify the buffers we are going to render to.
+//    //// 指定将要渲染的缓冲区
+//    //m_command_list->OMSetRenderTargets
+//    //(
+//    //    1, 
+//    //    &CurrentBackBufferView(),
+//    //    true,
+//    //    &DepthStencilView()
+//    //);
+//
+//    //// Indicate a state transition on the resource usage.
+//    //// 再次对资源状态进行转换，将资源从渲染目标状态转换回呈现状态
+//    //m_command_list->ResourceBarrier
+//    //(
+//    //    1, 
+//    //    &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+//    //    D3D12_RESOURCE_STATE_RENDER_TARGET, 
+//    //    D3D12_RESOURCE_STATE_PRESENT)
+//    //);
+//
+//    //// Done recording commands.
+//    //// 完成命令记录
+//    //ThrowIfFailed(m_command_list->Close());
+//
+//    //// Add the command list to the queue for execution.
+//    //// 将待执行的命令列表加入命令队列
+//    //ID3D12CommandList* command_lists[] = { m_command_list.Get() };
+//    //m_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
+//
+//    UpdateBox();
+//    DrawBox();
+//
+//    return true;
+//}
+//
+////--------------------------------------------------------------------------------
+////  End render and present the buffers 
+////  描画終了、バッファの切り替え
+////  渲染完成并交换画面缓存
+////--------------------------------------------------------------------------------
+//void RenderSystemDirectX12::EndRender()
+//{
+//    //// swap the back and front buffers
+//    //// 交换前台与后台缓冲区
+//    //ThrowIfFailed(m_swap_chain->Present(0, 0));
+//    //m_current_back_buffer = (m_current_back_buffer + 1) % sc_swap_chain_buffer_count;
+//
+//    //// Wait until frame commands are complete.  This waiting is inefficient and is
+//    //// done for simplicity.  Later we will show how to organize our rendering code
+//    //// so we do not have to wait per frame.
+//    //// 等待此前的命令执行完毕，当前的实现没有什么效果，也过于简单
+//    //// 在后面将重新组织渲染部分的代码，以免在每一帧都要等待
+//    //FlushCommandQueue();
+//}
 
 //--------------------------------------------------------------------------------
 //  Create the directx12 device
@@ -518,7 +535,7 @@ void RenderSystemDirectX12::FlushCommandQueue()
 void RenderSystemDirectX12::CreateRenderTargetView()
 {
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_heap_handle(m_rtv_heap->GetCPUDescriptorHandleForHeapStart());
-    for (UINT i = 0; i < sc_swap_chain_buffer_count; i++)
+    for (u32 i = 0; i < sc_swap_chain_buffer_count; i++)
     {
         // 获得存于swapchain中的buffer
         ThrowIfFailed
@@ -555,7 +572,7 @@ void RenderSystemDirectX12::CreateRenderTargetView()
 //  depth/stencil buffer and viewの作成
 //  创建深度/模板缓冲区及视图
 //--------------------------------------------------------------------------------
-void RenderSystemDirectX12::CreateDepthStencilBufferView(const UINT width, const UINT height)
+void RenderSystemDirectX12::CreateDepthStencilBufferView(const u32 width, const u32 height)
 {
     D3D12_RESOURCE_DESC depth_stencil_desc;
     depth_stencil_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // 资源的维度
@@ -620,6 +637,19 @@ void RenderSystemDirectX12::CreateDepthStencilBufferView(const UINT width, const
 }
 
 //--------------------------------------------------------------------------------
+//  Create the frame resources
+//  frame resourcesの作成
+//  创建帧资源
+//--------------------------------------------------------------------------------
+void RenderSystemDirectX12::CreateFrameResources()
+{
+    for (u32 i = 0; i < sc_num_frame_resources; ++i)
+    {
+        m_frame_resources[i] = MY_NEW FrameResource(m_device.Get(), 1, static_cast<u32>(mAllRitems.size()));
+    }
+}
+
+//--------------------------------------------------------------------------------
 //  Get the current backbuffer
 //  Return：ID3D12Resource*
 //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -670,17 +700,64 @@ D3D12_CPU_DESCRIPTOR_HANDLE RenderSystemDirectX12::DepthStencilView() const
     return m_dsv_heap->GetCPUDescriptorHandleForHeapStart();
 }
 
+//--------------------------------------------------------------------------------
+//  update FrameResource
+//  FrameResource更新
+//  更新帧资源
+//--------------------------------------------------------------------------------
+void RenderSystemDirectX12::UpdateFrameResource()
+{
+    {// Current
+        // 增加围栏值,将命令标记到此围栏点
+        // Advance the fence value to mark commands up to this fence point.
+        m_frame_resources[m_current_frame_resource_index]->SetCurrentFence(++m_current_fence);
+
+        // 向命令队列添加一条指令来设置一个新的围栏点
+        // 由于当前的gpu正在执行绘制命令,所以在gpu处理完signal()函数之前的所有命令以前
+        // 并不会设置此新的围栏点
+        // Add an instruction to the command queue to set a new fence point. 
+        // Because we are on the GPU timeline, the new fence point won't be 
+        // set until the GPU finishes processing all the commands prior to this Signal().
+        m_command_queue->Signal(m_fence.Get(), m_current_fence);
+
+        // gpu此时可能仍然在处理上一帧数据,但是这也没什么问题,因为我们这些操作并没有
+        // 影响与之前帧相关联的帧资源
+    }
+
+    {// Next
+        // 循环获取帧资源循环数组中的元素
+        // Cycle through the circular frame resource array.
+        m_current_frame_resource_index = (m_current_frame_resource_index + 1) % sc_num_frame_resources;
+
+        // gpu端是否已经执行完处理当前帧资源的所有命令了呢?
+        // 如果还没有就令cpu等待, 直到gpu执行完成并抵达这个围栏点
+        // Has the GPU finished processing the commands of the current frame resource?
+        // If not, wait until the GPU has completed commands up to this fence point.
+        auto current_fence = m_frame_resources[m_current_frame_resource_index]->CurrentFence();
+        if (current_fence != 0
+            && m_fence->GetCompletedValue() < current_fence)
+        {
+            HANDLE event_handle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+            ThrowIfFailed(m_fence->SetEventOnCompletion(current_fence, event_handle));
+            WaitForSingleObject(event_handle, INFINITE);
+            CloseHandle(event_handle);
+        }
+    }
+}
+
 //Test
-void RenderSystemDirectX12::InitBox()
+void RenderSystemDirectX12::InitTest()
 {
     // Reset the command list to prep for initialization commands.
     ThrowIfFailed(m_command_list->Reset(m_command_list_allocator.Get(), nullptr));
 
-    BuildDescriptorHeaps();
-    BuildConstantBuffers();
     BuildRootSignature();
-    BuildBoxGeometry();
-    BuildPSO();
+    BuildGeometry();
+    BuildRenderItems();
+    CreateFrameResources();
+    BuildDescriptorHeaps();
+    BuildConstantBufferViews();
+    BuildPSOs();
 
     // Execute the initialization commands.
     ThrowIfFailed(m_command_list->Close());
@@ -691,65 +768,135 @@ void RenderSystemDirectX12::InitBox()
     FlushCommandQueue();
 }
 
-void RenderSystemDirectX12::UninitBox()
+void RenderSystemDirectX12::UninitTest()
 {
-    SAFE_DELETE(mObjectCB);
-    SAFE_DELETE(mBoxGeo);
+    for (auto item : mAllRitems)
+    {
+        SAFE_DELETE(item);
+    }
+
+    for (auto geo : mGeometries)
+    {
+        SAFE_DELETE(geo.second);
+    }
 }
 
-void RenderSystemDirectX12::UpdateBox()
+void RenderSystemDirectX12::UpdateTest()
 {
-    XMMATRIX mProj =  XMMatrixIdentity();
+    UpdateCamera();
+    UpdateObjectCBs();
+    UpdateMainPassCB();
+}
 
-    float mTheta = 1.5f * XM_PI;
-    float mPhi = XM_PIDIV4;
-    float mRadius = 5.0f;
+void RenderSystemDirectX12::UpdateCamera()
+{
+    static float mTheta = 0.0f;
+    mTheta += XM_PI * GameTimer::Instance().DeltaTime() * 0.1f;
+    float mPhi = XM_PIDIV4 * 1.5f;
+    float mRadius = 10.0f;
 
     // Convert Spherical to Cartesian coordinates.
-    float x = mRadius * sinf(mPhi) * cosf(mTheta);
-    float z = mRadius * sinf(mPhi) * sinf(mTheta);
-    float y = mRadius * cosf(mPhi);
+    mEyePos.x = mRadius * sinf(mPhi) * cosf(mTheta);
+    mEyePos.z = mRadius * sinf(mPhi) * sinf(mTheta);
+    mEyePos.y = mRadius * cosf(mPhi);
 
     // Build the view matrix.
-    XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
+    XMVECTOR pos = XMVectorSet(mEyePos.x, mEyePos.y, mEyePos.z, 1.0f);
     XMVECTOR target = XMVectorZero();
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-    XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
+    mView = XMMatrixLookAtLH(pos, target, up);
 
-    XMMATRIX world = XMMatrixIdentity();
     float width = static_cast<float>(MainSystem::Instance().Width());
     float height = static_cast<float>(MainSystem::Instance().Height());
-    XMMATRIX proj = XMMatrixPerspectiveFovLH(0.25f * XM_PI, width / height, 1.0f, 1000.0f);
-    XMMATRIX worldViewProj = world * view * proj;
-
-    // Update the constant buffer with the latest worldViewProj matrix.
-    ObjectConstants objConstants;
-    objConstants.world_view_projection = XMMatrixTranspose(worldViewProj);
-    mObjectCB->CopyData(0, objConstants);
+    mProj = XMMatrixPerspectiveFovLH(0.25f * XM_PI, width / height, 1.0f, 1000.0f);
 }
 
-void RenderSystemDirectX12::DrawBox()
+void RenderSystemDirectX12::UpdateObjectCBs()
 {
-    // Reuse the memory associated with command recording.
-// We can only reset when the associated command lists have finished execution on the GPU.
-    ThrowIfFailed(m_command_list_allocator->Reset());
+    auto currObjectCB = m_frame_resources[m_current_frame_resource_index]->ObjectCbuffer();
+    for (auto& e : mAllRitems)
+    {
+        // 只要常量发生了改变就得更新常量缓冲区内的数据,而且要对每个帧资源都进行更新
+        // Only update the cbuffer data if the constants have changed.  
+        // This needs to be tracked per frame resource.
+        if (e->NumFramesDirty > 0)
+        {
+            ObjectConstants objConstants;
+            objConstants.world = XMMatrixTranspose(e->World);
 
+            currObjectCB->CopyData(e->ObjCBIndex, objConstants);
+
+            // 还需要对下一个frameresource进行更新
+            // Next FrameResource need to be updated too.
+            e->NumFramesDirty--;
+        }
+    }
+}
+
+void RenderSystemDirectX12::UpdateMainPassCB()
+{
+    XMMATRIX viewProj = XMMatrixMultiply(mView, mProj);
+    XMMATRIX invView = XMMatrixInverse(&XMMatrixDeterminant(mView), mView);
+    XMMATRIX invProj = XMMatrixInverse(&XMMatrixDeterminant(mProj), mProj);
+    XMMATRIX invViewProj = XMMatrixInverse(&XMMatrixDeterminant(viewProj), viewProj);
+
+    mMainPassCB.View = XMMatrixTranspose(mView);
+    mMainPassCB.InvView = XMMatrixTranspose(invView);
+    mMainPassCB.Proj = XMMatrixTranspose(mView);
+    mMainPassCB.InvProj = XMMatrixTranspose(invProj);
+    mMainPassCB.ViewProj = XMMatrixTranspose(viewProj);
+    mMainPassCB.InvViewProj = XMMatrixTranspose(invViewProj);
+    mMainPassCB.EyePosW = mEyePos;
+    mMainPassCB.RenderTargetSize = XMFLOAT2((float)MainSystem::Instance().Width(), (float)MainSystem::Instance().Height());
+    mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / MainSystem::Instance().Width(), 1.0f / MainSystem::Instance().Height());
+    mMainPassCB.NearZ = 1.0f;
+    mMainPassCB.FarZ = 1000.0f;
+    mMainPassCB.TotalTime = 0.0f;
+    mMainPassCB.DeltaTime = GameTimer::Instance().DeltaTime();
+
+    auto currPassCB = m_frame_resources[m_current_frame_resource_index]->PassCbuffer();
+    currPassCB->CopyData(0, mMainPassCB);
+}
+
+void RenderSystemDirectX12::DrawTest()
+{
+    auto cmdListAlloc = m_frame_resources[m_current_frame_resource_index]->CommandListAllocator();
+
+    // 复用与记录命令有关的内存
+    // 只有在gpu执行完与该内存相关联的命令列表时,才能对此命令列表分配器进行重置
+    // Reuse the memory associated with command recording.
+    // We can only reset when the associated command lists have finished execution on the GPU.
+    ThrowIfFailed(cmdListAlloc->Reset());
+
+    // 在通过ExecuteCommandList方法将命令列表添加到命令队列中之后,
+    // 就可以对他进行重置,复用命令列表即复用与之相关的内存
     // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
     // Reusing the command list reuses memory.
-    ThrowIfFailed(m_command_list->Reset(m_command_list_allocator.Get(), mPSO.Get()));
+    ThrowIfFailed(m_command_list->Reset(cmdListAlloc.Get(), mPSOs["opaque"].Get()));
+    //if (mIsWireframe)
+    //{
+    //    ThrowIfFailed(m_command_list->Reset(cmdListAlloc.Get(), mPSOs["opaque_wireframe"].Get()));
+    //}
+    //else
+    //{
+    //    ThrowIfFailed(m_command_list->Reset(cmdListAlloc.Get(), mPSOs["opaque"].Get()));
+    //}
 
     m_command_list->RSSetViewports(1, &m_screen_viewport);
     m_command_list->RSSetScissorRects(1, &m_scissor_rect);
 
+    // 根据资源的用途指示资源状态的转换
     // Indicate a state transition on the resource usage.
     m_command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
+    // 清除后台缓冲区和深度缓冲区
     // Clear the back buffer and depth buffer.
     m_command_list->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
     m_command_list->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
+    // 指定要渲染的目标缓冲区
     // Specify the buffers we are going to render to.
     m_command_list->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 
@@ -758,54 +905,91 @@ void RenderSystemDirectX12::DrawBox()
     // 希望绑定到渲染流水线的资源
     ID3D12DescriptorHeap* descriptor_heaps[] = { mCbvHeap.Get() };
     m_command_list->SetDescriptorHeaps(_countof(descriptor_heaps), descriptor_heaps);
-
+    
     m_command_list->SetGraphicsRootSignature(mRootSignature.Get());
-
+    
+    int passCbvIndex = mPassCbvOffset + m_current_frame_resource_index;
+    auto passCbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
+    passCbvHandle.Offset(passCbvIndex, m_cbv_srv_uav_descriptor_size);
     m_command_list->SetGraphicsRootDescriptorTable(
-        0, // 将跟参数按此索引（即与绑定到的寄存器槽号）进行设置
+        1,// 将跟参数按此索引（即与绑定到的寄存器槽号）进行设置
         // 此参数指定的是将要想着色器绑定的描述符表中第一个描述符位于描述符
         // 堆中的句柄。比如说，如果根签名知名当前描述符表中共有5个描述符，
         // 则堆中的BaseDescriptor及其后面的4个描述符将被设置到此描述符表中
-        mCbvHeap->GetGPUDescriptorHandleForHeapStart());
+        passCbvHandle);
     //
     /////////////////////////////////////////////////////////////////////////////
 
-    m_command_list->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
-    m_command_list->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
-    m_command_list->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    DrawRenderItems(mOpaqueRitems);
 
-
-
-    m_command_list->DrawIndexedInstanced(
-        mBoxGeo->unit_mesh_geometries["box"].index_count,
-        1, 0, 0, 0);
-
+    // 按照资源的用途指示资源状态的转换
     // Indicate a state transition on the resource usage.
     m_command_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
         D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
+    // 完成命令的记录
     // Done recording commands.
     ThrowIfFailed(m_command_list->Close());
 
+    // 将命令列表加入到命令队列中用于执行
     // Add the command list to the queue for execution.
-    ID3D12CommandList* command_lists[] = { m_command_list.Get() };
-    m_command_queue->ExecuteCommandLists(_countof(command_lists), command_lists);
+    ID3D12CommandList* cmdsLists[] = { m_command_list.Get() };
+    m_command_queue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
-    // swap the back and front buffers
+    // 交换前后台缓冲区
+    // Swap the back and front buffers
     ThrowIfFailed(m_swap_chain->Present(0, 0));
     m_current_back_buffer = (m_current_back_buffer + 1) % sc_swap_chain_buffer_count;
+}
 
-    // Wait until frame commands are complete.  This waiting is inefficient and is
-    // done for simplicity.  Later we will show how to organize our rendering code
-    // so we do not have to wait per frame.
-    FlushCommandQueue();
+void RenderSystemDirectX12::DrawRenderItems(const std::vector<RenderItem*>& ritems)
+{
+    u32 objCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(ObjectConstants));
+
+    auto objectCB = m_frame_resources[m_current_frame_resource_index]->ObjectCbuffer()->Resource();
+
+    // 对于每个渲染项来说
+    // For each render item...
+    for (size_t i = 0; i < ritems.size(); ++i)
+    {
+        auto ri = ritems[i];
+
+        m_command_list->IASetVertexBuffers(0, 1, &ri->Geo->VertexBufferView());
+        m_command_list->IASetIndexBuffer(&ri->Geo->IndexBufferView());
+        m_command_list->IASetPrimitiveTopology(ri->PrimitiveType);
+
+        // 为了绘制当前的帧资源和当前物体,偏移到描述符堆中对应的cbv处
+        // Offset to the CBV in the descriptor heap for this object and for this frame resource.
+        u32 cbvIndex = m_current_frame_resource_index * (u32)mOpaqueRitems.size() + ri->ObjCBIndex;
+        auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
+        cbvHandle.Offset(cbvIndex, m_cbv_srv_uav_descriptor_size);
+
+        m_command_list->SetGraphicsRootDescriptorTable(0, cbvHandle);
+
+        m_command_list->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
+    }
 }
 
 // 利用描述符将常量缓冲区绑定到渲染流水线上
 void RenderSystemDirectX12::BuildDescriptorHeaps()
 {
+    // 如果有3个帧资源与n个渲染项,那么就应存在3n个物体常量缓冲区(object constant buffer)
+    // 以及3个渲染过程常量缓冲区(pass constant buffer)
+    // 因此我们也就需要创建3(n+1)个常量缓冲区视图(cbv)
+    u32 objCount = (u32)mOpaqueRitems.size();
+
+    // 我们需要为每个帧资源中的每一个物体都创建一个cbv描述符
+    // 为了容纳每个帧资源中的渲染过程cbv而+1
+    // Need a CBV descriptor for each object for each frame resource,
+    // +1 for the perPass CBV for each frame resource.
+    u32 numDescriptors = (objCount + 1) * sc_num_frame_resources;
+
+    // 保存渲染过程cbv的起始偏移量,在本程序中,这是排在最后面的3个描述符
+    // Save an offset to the start of the pass CBVs.  These are the last 3 descriptors.
+    mPassCbvOffset = objCount * sc_num_frame_resources;
+
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
-    cbvHeapDesc.NumDescriptors = 1;
+    cbvHeapDesc.NumDescriptors = numDescriptors;
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     cbvHeapDesc.NodeMask = 0;
@@ -813,27 +997,64 @@ void RenderSystemDirectX12::BuildDescriptorHeaps()
         IID_PPV_ARGS(&mCbvHeap)));
 }
 
-void RenderSystemDirectX12::BuildConstantBuffers()
+void RenderSystemDirectX12::BuildConstantBufferViews()
 {
-    mObjectCB = MY_NEW UploadBuffer<ObjectConstants>(m_device.Get(), 1, true);
+    u32 objCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(ObjectConstants));
 
-    const u32 object_constant_buffer_size = Utility::CalculateConstantBufferByteSize(sizeof(ObjectConstants));
+    u32 objCount = (u32)mOpaqueRitems.size();
 
-    // 缓冲区的起始地址（即索引为0的那个常量缓冲区的地址）
-    D3D12_GPU_VIRTUAL_ADDRESS gpu_virtual_address = mObjectCB->Resource()->GetGPUVirtualAddress();
-   
-    // 偏移到常量缓冲区中绘制第一个物体所需的常量数据
-    // Offset to the ith object constant buffer in the buffer.
-    int buffer_index = 0;
-    gpu_virtual_address += buffer_index * object_constant_buffer_size;
+    // 每个帧资源中的每一个物体都需要一个对应的cbv描述符
+    // Need a CBV descriptor for each object for each frame resource.
+    for (int frameIndex = 0; frameIndex < sc_num_frame_resources; ++frameIndex)
+    {
+        auto objectCB = m_frame_resources[frameIndex]->ObjectCbuffer()->Resource();
 
-    D3D12_CONSTANT_BUFFER_VIEW_DESC constant_buffer_view_desc;
-    constant_buffer_view_desc.BufferLocation = gpu_virtual_address;
-    constant_buffer_view_desc.SizeInBytes = object_constant_buffer_size;
+        for (u32 i = 0; i < objCount; ++i)
+        {
+            // 缓冲区的起始地址（即索引为0的那个常量缓冲区的地址）
+            D3D12_GPU_VIRTUAL_ADDRESS cbAddress = objectCB->GetGPUVirtualAddress();
 
-    m_device->CreateConstantBufferView(
-        &constant_buffer_view_desc,
-        mCbvHeap->GetCPUDescriptorHandleForHeapStart());
+            // 偏移到常量缓冲区中绘制第i个物体所需的常量数据
+            // Offset to the ith object constant buffer in the buffer.
+            cbAddress += i * objCBByteSize;
+
+            // 偏移到该物体在描述符队中的cbv
+            // Offset to the object cbv in the descriptor heap.
+            int heapIndex = frameIndex * objCount + i;
+            auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCbvHeap->GetCPUDescriptorHandleForHeapStart());
+            handle.Offset(heapIndex, m_cbv_srv_uav_descriptor_size);
+
+            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+            cbvDesc.BufferLocation = cbAddress;
+            cbvDesc.SizeInBytes = objCBByteSize;
+
+            m_device->CreateConstantBufferView(&cbvDesc, handle);
+        }
+    }
+
+    u32 passCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(PassConstants));
+
+    // 最后3个描述符依次是每个帧资源的渲染过程cbv
+    // Last three descriptors are the pass CBVs for each frame resource.
+    for (int frameIndex = 0; frameIndex < sc_num_frame_resources; ++frameIndex)
+    {
+        auto passCB = m_frame_resources[frameIndex]->PassCbuffer()->Resource();
+
+        // 每个帧资源的渲染过程缓冲区中只有一个常量缓冲区
+        D3D12_GPU_VIRTUAL_ADDRESS cbAddress = passCB->GetGPUVirtualAddress();
+
+        // 偏移到描述符堆中对应的渲染过程cbv
+        // Offset to the pass cbv in the descriptor heap.
+        int heapIndex = mPassCbvOffset + frameIndex;
+        auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCbvHeap->GetCPUDescriptorHandleForHeapStart());
+        handle.Offset(heapIndex, m_cbv_srv_uav_descriptor_size);
+
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+        cbvDesc.BufferLocation = cbAddress;
+        cbvDesc.SizeInBytes = passCBByteSize;
+
+        m_device->CreateConstantBufferView(&cbvDesc, handle);
+    }
 }
 
 void RenderSystemDirectX12::BuildRootSignature()
@@ -846,122 +1067,179 @@ void RenderSystemDirectX12::BuildRootSignature()
     // the input resources as function parameters, then the root signature can be
     // thought of as defining the function signature.  
 
-    // Root parameter can be a table, root descriptor or root constants.
-    CD3DX12_ROOT_PARAMETER slot_root_parameter[1];
-
-    // Create a single descriptor table of CBVs.(constant buffer view)
-    CD3DX12_DESCRIPTOR_RANGE cbv_table;
-    cbv_table.Init(
+    CD3DX12_DESCRIPTOR_RANGE cbvTable0;
+    cbvTable0.Init(
         D3D12_DESCRIPTOR_RANGE_TYPE_CBV,// 描述符表的类型
         1,                              // 表中的描述符数量
         0);                             // 将这段描述符区域绑定至此基准着色器寄存器（base shader register）
 
-    slot_root_parameter[0].InitAsDescriptorTable(
+    CD3DX12_DESCRIPTOR_RANGE cbvTable1;
+    cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+
+    // Root parameter can be a table, root descriptor or root constants.
+    CD3DX12_ROOT_PARAMETER slotRootParameter[2] = {};
+
+    // Create root CBVs.
+    slotRootParameter[0].InitAsDescriptorTable(
         1,          // 描述符区域的数量
-        &cbv_table);// 只想描述符区域数组的指针
+        &cbvTable0);// 只想描述符区域数组的指针
+    slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1);
 
     // A root signature is an array of root parameters.
-    CD3DX12_ROOT_SIGNATURE_DESC root_signature_desc(1, slot_root_parameter, 0, nullptr,
+    CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(2, slotRootParameter, 0, nullptr,
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
     // 创建仅含一个槽位（该槽位指向一个仅由单个常量缓冲区组成的描述符区域）的根签名
     // create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
-    ComPtr<ID3DBlob> serialized_root_signature = nullptr;
-    ComPtr<ID3DBlob> error_blob = nullptr;
-    HRESULT hr = D3D12SerializeRootSignature(
-        &root_signature_desc,
-        D3D_ROOT_SIGNATURE_VERSION_1, 
-        serialized_root_signature.GetAddressOf(),
-        error_blob.GetAddressOf());
+    ComPtr<ID3DBlob> serializedRootSig = nullptr;
+    ComPtr<ID3DBlob> errorBlob = nullptr;
+    HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+        serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
 
-    if (error_blob != nullptr)
+    if (errorBlob != nullptr)
     {
-        ::OutputDebugStringA((char*)error_blob->GetBufferPointer());
+        ::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
     }
     ThrowIfFailed(hr);
 
     ThrowIfFailed(m_device->CreateRootSignature(
         0,
-        serialized_root_signature->GetBufferPointer(),
-        serialized_root_signature->GetBufferSize(),
-        IID_PPV_ARGS(&mRootSignature)));
+        serializedRootSig->GetBufferPointer(),
+        serializedRootSig->GetBufferSize(),
+        IID_PPV_ARGS(mRootSignature.GetAddressOf())));
 }
 
-void RenderSystemDirectX12::BuildBoxGeometry()
+void RenderSystemDirectX12::BuildGeometry()
 {
-    std::array<Vertex3d, 8> vertices =
+    MeshData box = MeshGenerator::CreateBox(1.5f, 0.5f, 1.5f, 3);
+    MeshData grid = MeshGenerator::CreateGrid(20.0f, 30.0f, 60, 40);
+    MeshData sphere = MeshGenerator::CreateSphere(0.5f, 20, 20);
+    MeshData cylinder = MeshGenerator::CreateCylinder(0.5f, 0.3f, 3.0f, 20, 20);
+
+    // 
+    // 将所有的几何体数据都合并到一对大的顶点索引缓冲区中
+    // 以此来定义每个子网格数据在缓冲区中所占的范围
+    // We are concatenating all the geometry into one big vertex/index buffer.  So
+    // define the regions in the buffer each submesh covers.
+    //
+
+    // 对合并顶点缓冲区中每个物体的顶点偏移量进行缓存
+    // Cache the vertex offsets to each object in the concatenated vertex buffer.
+    u32 boxVertexOffset = 0;
+    u32 gridVertexOffset = (u32)box.vertices.size();
+    u32 sphereVertexOffset = gridVertexOffset + (u32)grid.vertices.size();
+    u32 cylinderVertexOffset = sphereVertexOffset + (u32)sphere.vertices.size();
+
+    // 对合并索引缓冲区中每个物体的起始索引进行缓存
+    // Cache the starting index for each object in the concatenated index buffer.
+    u32 boxIndexOffset = 0;
+    u32 gridIndexOffset = (u32)box.indeces.size();
+    u32 sphereIndexOffset = gridIndexOffset + (u32)grid.indeces.size();
+    u32 cylinderIndexOffset = sphereIndexOffset + (u32)sphere.indeces.size();
+
+    // 定义的多个UnitMeshGeometry结构体中包含了顶点索引缓冲区内不同几何体的子网格数据
+    // Define the UnitMeshGeometry that cover different 
+    // regions of the vertex/index buffers.
+
+    UnitMeshGeometry boxSubmesh;
+    boxSubmesh.index_count = (u32)box.indeces.size();
+    boxSubmesh.start_index_location = boxIndexOffset;
+    boxSubmesh.base_vertex_location = boxVertexOffset;
+
+    UnitMeshGeometry gridSubmesh;
+    gridSubmesh.index_count = (u32)grid.indeces.size();
+    gridSubmesh.start_index_location = gridIndexOffset;
+    gridSubmesh.base_vertex_location = gridVertexOffset;
+
+    UnitMeshGeometry sphereSubmesh;
+    sphereSubmesh.index_count = (u32)sphere.indeces.size();
+    sphereSubmesh.start_index_location = sphereIndexOffset;
+    sphereSubmesh.base_vertex_location = sphereVertexOffset;
+
+    UnitMeshGeometry cylinderSubmesh;
+    cylinderSubmesh.index_count = (u32)cylinder.indeces.size();
+    cylinderSubmesh.start_index_location = cylinderIndexOffset;
+    cylinderSubmesh.base_vertex_location = cylinderVertexOffset;
+
+    // 
+    // 提取出所需的顶点元素,再将所有网格的顶点装进一个顶点缓冲区
+    // Extract the vertex elements we are interested in and pack the
+    // vertices of all the meshes into one vertex buffer.
+    //
+
+    auto totalVertexCount =
+        box.vertices.size() +
+        grid.vertices.size() +
+        sphere.vertices.size() +
+        cylinder.vertices.size();
+
+    std::vector<VertexTest> vertices(totalVertexCount);
+
+    u32 k = 0;
+    for (size_t i = 0; i < box.vertices.size(); ++i, ++k)
     {
-        Vertex3d({ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::White) }),
-        Vertex3d({ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Black) }),
-        Vertex3d({ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Red) }),
-        Vertex3d({ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::Green) }),
-        Vertex3d({ XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Blue) }),
-        Vertex3d({ XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Yellow) }),
-        Vertex3d({ XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Cyan) }),
-        Vertex3d({ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Magenta) })
-    };
+        vertices[k].position = box.vertices[i].position;
+        vertices[k].color = XMFLOAT4(DirectX::Colors::DarkGreen);
+    }
 
-    std::array<std::uint16_t, 36> indices =
+    for (size_t i = 0; i < grid.vertices.size(); ++i, ++k)
     {
-        // front face
-        0, 1, 2,
-        0, 2, 3,
+        vertices[k].position = grid.vertices[i].position;
+        vertices[k].color = XMFLOAT4(DirectX::Colors::ForestGreen);
+    }
 
-        // back face
-        4, 6, 5,
-        4, 7, 6,
+    for (size_t i = 0; i < sphere.vertices.size(); ++i, ++k)
+    {
+        vertices[k].position = sphere.vertices[i].position;
+        vertices[k].color = XMFLOAT4(DirectX::Colors::Crimson);
+    }
 
-        // left face
-        4, 5, 1,
-        4, 1, 0,
+    for (size_t i = 0; i < cylinder.vertices.size(); ++i, ++k)
+    {
+        vertices[k].position = cylinder.vertices[i].position;
+        vertices[k].color = XMFLOAT4(DirectX::Colors::SteelBlue);
+    }
 
-        // right face
-        3, 2, 6,
-        3, 6, 7,
+    std::vector<u32> indices;
+    indices.insert(indices.end(), std::begin(box.indeces), std::end(box.indeces));
+    indices.insert(indices.end(), std::begin(grid.indeces), std::end(grid.indeces));
+    indices.insert(indices.end(), std::begin(sphere.indeces), std::end(sphere.indeces));
+    indices.insert(indices.end(), std::begin(cylinder.indeces), std::end(cylinder.indeces));
 
-        // top face
-        1, 5, 6,
-        1, 6, 2,
+    const u32 vbByteSize = (u32)vertices.size() * sizeof(VertexTest);
+    const u32 ibByteSize = (u32)indices.size() * sizeof(u32);
 
-        // bottom face
-        4, 0, 3,
-        4, 3, 7
-    };
+    auto geo = new MeshGeometry();
+    geo->name = "shapeGeo";
 
-    const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex3d);
-    const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
+    ThrowIfFailed(D3DCreateBlob(vbByteSize, &geo->vertex_buffer_cpu));
+    CopyMemory(geo->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
 
-    mBoxGeo = MY_NEW MeshGeometry;
-    mBoxGeo->name = "boxGeo";
+    ThrowIfFailed(D3DCreateBlob(ibByteSize, &geo->index_buffer_cpu));
+    CopyMemory(geo->index_buffer_cpu->GetBufferPointer(), indices.data(), ibByteSize);
 
-    ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo->vertex_buffer_cpu));
-    CopyMemory(mBoxGeo->vertex_buffer_cpu->GetBufferPointer(), vertices.data(), vbByteSize);
+    geo->vertex_buffer_gpu = CreateDefaultBuffer(vertices.data(), vbByteSize, geo->vertex_buffer_uploader);
 
-    ThrowIfFailed(D3DCreateBlob(ibByteSize, &mBoxGeo->index_buffer_cpu));
-    CopyMemory(mBoxGeo->index_buffer_cpu->GetBufferPointer(), indices.data(), ibByteSize);
+    geo->index_buffer_gpu = CreateDefaultBuffer(indices.data(), ibByteSize, geo->index_buffer_uploader);
 
-    mBoxGeo->vertex_buffer_gpu = CreateDefaultBuffer(vertices.data(), vbByteSize, mBoxGeo->vertex_buffer_uploader);
+    geo->vertex_byte_stride = sizeof(VertexTest);
+    geo->vertex_buffer_byte_size = vbByteSize;
+    geo->index_format = DXGI_FORMAT_R32_UINT;
+    geo->index_buffer_byte_size = ibByteSize;
 
-    mBoxGeo->index_buffer_gpu = CreateDefaultBuffer(indices.data(), ibByteSize, mBoxGeo->index_buffer_uploader);
+    geo->unit_mesh_geometries["box"] = boxSubmesh;
+    geo->unit_mesh_geometries["grid"] = gridSubmesh;
+    geo->unit_mesh_geometries["sphere"] = sphereSubmesh;
+    geo->unit_mesh_geometries["cylinder"] = cylinderSubmesh;
 
-    mBoxGeo->vertex_byte_stride = sizeof(Vertex3d);
-    mBoxGeo->vertex_buffer_byte_size = vbByteSize;
-    mBoxGeo->index_format = DXGI_FORMAT_R16_UINT;
-    mBoxGeo->index_buffer_byte_size = ibByteSize;
-
-    UnitMeshGeometry unit_mesh;
-    unit_mesh.index_count = (UINT)indices.size();
-    unit_mesh.start_index_location = 0;
-    unit_mesh.base_vertex_location = 0;
-
-    mBoxGeo->unit_mesh_geometries["box"] = unit_mesh;
+    mGeometries[geo->name] = geo;
 }
 
-void RenderSystemDirectX12::BuildPSO()
+void RenderSystemDirectX12::BuildPSOs()
 {
     // BuildShadersAndInputLayout
-    mvsByteCode = CompileShader(L"SourceCodes\\Systems\\RenderSystem\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-    mpsByteCode = CompileShader(L"SourceCodes\\Systems\\RenderSystem\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+    mShaders["standardVS"] = CompileShader(L"SourceCodes\\Systems\\RenderSystem\\Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
+    mShaders["opaquePS"] = CompileShader(L"SourceCodes\\Systems\\RenderSystem\\Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout =
     {
@@ -977,38 +1255,33 @@ void RenderSystemDirectX12::BuildPSO()
     // PSO的验证和创建操作过于耗时，所以应在初始化期间就生成PSO，除非有特别需求
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
     ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-
-    // 指向一个与此pso像绑定的根签名指针。该根签名一定要于此PSO指定的着色器相兼容
-    psoDesc.pRootSignature = mRootSignature.Get();
-
-    // 输入布局描述
-    psoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
+    psoDesc.pRootSignature = mRootSignature.Get(); // 指向一个与此pso像绑定的根签名指针。该根签名一定要于此PSO指定的着色器相兼容
+    psoDesc.InputLayout = { mInputLayout.data(), (u32)mInputLayout.size() }; // 输入布局描述
+    psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT); // 指定用来配置光栅器的光栅化状态
+    psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+    psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT); // 指定混合操作所用的混合状态
+    psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT); // 指定用于配置深度/模板状态。
+    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;  // 指定图元的拓扑类型
+    psoDesc.NumRenderTargets = 1; // 同时所用的渲染目标数量（即RTVFormats数组中渲染目标格式的数量）
+    psoDesc.RTVFormats[0] = m_back_buffer_format; // 渲染目标的格式。利用该数组实现向多渲染目标同时进行写操作
+    psoDesc.DSVFormat = m_depth_stencil_format; // 深度/模板缓冲区的格式
 
     // 待绑定的顶点着色器，由结构体D3D12_SHADER_BYTECODE表示
     // 这个结构体存有指向已编译好的字节码数据的指针
     // 以及该字节码数据所占的字节大小
     psoDesc.VS =
     {
-        reinterpret_cast<BYTE*>(mvsByteCode->GetBufferPointer()),
-        mvsByteCode->GetBufferSize()
+        reinterpret_cast<BYTE*>(mShaders["standardVS"]->GetBufferPointer()),
+        mShaders["standardVS"]->GetBufferSize()
     };
 
     // 待绑定的像素着色器
     psoDesc.PS =
     {
-        reinterpret_cast<BYTE*>(mpsByteCode->GetBufferPointer()),
-        mpsByteCode->GetBufferSize()
+        reinterpret_cast<BYTE*>(mShaders["opaquePS"]->GetBufferPointer()),
+        mShaders["opaquePS"]->GetBufferSize()
     };
-
-    // 指定用来配置光栅器的光栅化状态
-    psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-
-    // 指定混合操作所用的混合状态
-    psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-
-    // 指定用于配置深度/模板状态。
-    psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-
+     
     // 多重采样最多可采集32个样本。借此参数的32位整数值，即可设置每个采样点的采集情况
     // （采集或禁止采集）。例如若禁用了第五位（将第五位设置为0），则将不会对第五个样本
     // 进行采样。当然，要禁止采集第五个样本的前提是，所用的多重采样至少要有五个样本。
@@ -1016,25 +1289,99 @@ void RenderSystemDirectX12::BuildPSO()
     // 进行配置。一般来说，使用的都是默认值0xffffffff，即表示对所有的采样点都进行采样
     psoDesc.SampleMask = UINT_MAX;
 
-    // 指定图元的拓扑类型
-    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
-    // 同时所用的渲染目标数量（即RTVFormats数组中渲染目标格式的数量）
-    psoDesc.NumRenderTargets = 1;
-
-    // 渲染目标的格式。利用该数组实现向多渲染目标同时进行写操作
-    psoDesc.RTVFormats[0] = m_back_buffer_format;
-
     // 描述多重采样对每个像素采样的数量及其质量级别
     psoDesc.SampleDesc.Count = m_msaa_enable ? 4 : 1;
     psoDesc.SampleDesc.Quality = m_msaa_enable ? (m_msaa_quality - 1) : 0;
-
-    // 深度/模板缓冲区的格式
-    psoDesc.DSVFormat = m_depth_stencil_format;
     //
     //--------------------------------------------------------------------------------
 
-    ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSO)));
+    ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSOs["opaque"])));
+
+    //
+    // PSO for opaque wireframe objects.
+    //
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC opaqueWireframePsoDesc = psoDesc;
+    opaqueWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+    ThrowIfFailed(m_device->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&mPSOs["opaque_wireframe"])));
+}
+
+void RenderSystemDirectX12::BuildRenderItems()
+{
+    auto boxRitem = MY_NEW RenderItem();
+    boxRitem->World = XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(0.0f, 0.5f, 0.0f);
+    boxRitem->ObjCBIndex = 0;
+    boxRitem->Geo = mGeometries["shapeGeo"];
+    boxRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    boxRitem->IndexCount = boxRitem->Geo->unit_mesh_geometries["box"].index_count;
+    boxRitem->StartIndexLocation = boxRitem->Geo->unit_mesh_geometries["box"].start_index_location;
+    boxRitem->BaseVertexLocation = boxRitem->Geo->unit_mesh_geometries["box"].base_vertex_location;
+    mAllRitems.push_back(boxRitem);
+
+    auto gridRitem = MY_NEW RenderItem();
+    gridRitem->World = XMMatrixIdentity();
+    gridRitem->ObjCBIndex = 1;
+    gridRitem->Geo = mGeometries["shapeGeo"];
+    gridRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    gridRitem->IndexCount = gridRitem->Geo->unit_mesh_geometries["grid"].index_count;
+    gridRitem->StartIndexLocation = gridRitem->Geo->unit_mesh_geometries["grid"].start_index_location;
+    gridRitem->BaseVertexLocation = gridRitem->Geo->unit_mesh_geometries["grid"].base_vertex_location;
+    mAllRitems.push_back(gridRitem);
+
+    u32 objCBIndex = 2;
+    for (int i = 0; i < 5; ++i)
+    {
+        auto leftCylRitem = MY_NEW RenderItem();
+        auto rightCylRitem = MY_NEW RenderItem();
+        auto leftSphereRitem = MY_NEW RenderItem();
+        auto rightSphereRitem = MY_NEW RenderItem();
+
+        XMMATRIX leftCylWorld = XMMatrixTranslation(-5.0f, 1.5f, -10.0f + i * 5.0f);
+        XMMATRIX rightCylWorld = XMMatrixTranslation(+5.0f, 1.5f, -10.0f + i * 5.0f);
+
+        XMMATRIX leftSphereWorld = XMMatrixTranslation(-5.0f, 3.5f, -10.0f + i * 5.0f);
+        XMMATRIX rightSphereWorld = XMMatrixTranslation(+5.0f, 3.5f, -10.0f + i * 5.0f);
+
+        leftCylRitem->World = rightCylWorld;
+        leftCylRitem->ObjCBIndex = objCBIndex++;
+        leftCylRitem->Geo = mGeometries["shapeGeo"];
+        leftCylRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        leftCylRitem->IndexCount = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].index_count;
+        leftCylRitem->StartIndexLocation = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].start_index_location;
+        leftCylRitem->BaseVertexLocation = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].base_vertex_location;
+
+        rightCylRitem->World = leftCylWorld;
+        rightCylRitem->ObjCBIndex = objCBIndex++;
+        rightCylRitem->Geo = mGeometries["shapeGeo"];
+        rightCylRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        rightCylRitem->IndexCount = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].index_count;
+        rightCylRitem->StartIndexLocation = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].start_index_location;
+        rightCylRitem->BaseVertexLocation = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].base_vertex_location;
+
+        leftSphereRitem->World = leftSphereWorld;
+        leftSphereRitem->ObjCBIndex = objCBIndex++;
+        leftSphereRitem->Geo = mGeometries["shapeGeo"];
+        leftSphereRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        leftSphereRitem->IndexCount = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].index_count;
+        leftSphereRitem->StartIndexLocation = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].start_index_location;
+        leftSphereRitem->BaseVertexLocation = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].base_vertex_location;
+
+        rightSphereRitem->World = rightSphereWorld;
+        rightSphereRitem->ObjCBIndex = objCBIndex++;
+        rightSphereRitem->Geo = mGeometries["shapeGeo"];
+        rightSphereRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        rightSphereRitem->IndexCount = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].index_count;
+        rightSphereRitem->StartIndexLocation = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].start_index_location;
+        rightSphereRitem->BaseVertexLocation = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].base_vertex_location;
+
+        mAllRitems.push_back(leftCylRitem);
+        mAllRitems.push_back(rightCylRitem);
+        mAllRitems.push_back(leftSphereRitem);
+        mAllRitems.push_back(rightSphereRitem);
+    }
+
+    // All the render items are opaque.
+    for (auto& e : mAllRitems)
+        mOpaqueRitems.push_back(e);
 }
 
 // 利用作为中介的上传缓冲区来初始化默认缓冲区
@@ -1101,7 +1448,7 @@ ComPtr<ID3D12Resource> RenderSystemDirectX12::CreateDefaultBuffer(const void* in
 
 ComPtr<ID3DBlob> RenderSystemDirectX12::CompileShader(const LPCWSTR filename, const D3D_SHADER_MACRO* defines, const LPCSTR entrypoint, const LPCSTR target)
 {
-    UINT compile_flags = 0;
+    u32 compile_flags = 0;
 #if defined(DEBUG) || defined(_DEBUG)  
     compile_flags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif

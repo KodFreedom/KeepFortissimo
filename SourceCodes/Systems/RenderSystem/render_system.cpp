@@ -34,23 +34,6 @@ bool RenderSystem::StartUp(const RenderApiType type)
 }
 
 //--------------------------------------------------------------------------------
-//  Render
-//--------------------------------------------------------------------------------
-void RenderSystem::Render()
-{
-    if (PrepareRender())
-    {
-        // TODO : render components
-
-        EndRender();
-    }
-    else
-    {
-        // TODO : clear components
-    }
-}
-
-//--------------------------------------------------------------------------------
 //  SetMsaaEnable
 //--------------------------------------------------------------------------------
 void RenderSystem::SetMsaaEnable(bool value)

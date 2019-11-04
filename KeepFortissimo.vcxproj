@@ -22,6 +22,8 @@
     <ClCompile Include="SourceCodes\main.cpp" />
     <ClCompile Include="SourceCodes\Systems\game_timer.cpp" />
     <ClCompile Include="SourceCodes\Systems\main_system.cpp" />
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\frame_resource.cpp" />
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\mesh_generator.cpp" />
     <ClCompile Include="SourceCodes\Systems\RenderSystem\render_system.cpp" />
     <ClCompile Include="SourceCodes\Systems\RenderSystem\render_system_directx12.cpp" />
     <ClCompile Include="SourceCodes\Utilities\exception.cpp" />
@@ -34,10 +36,11 @@
     <ClInclude Include="SourceCodes\Systems\game_timer.h" />
     <ClInclude Include="SourceCodes\Systems\main_system.h" />
     <ClInclude Include="SourceCodes\Systems\RenderSystem\frame_resource.h" />
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\mesh_generator.h" />
     <ClInclude Include="SourceCodes\Systems\RenderSystem\mesh_geometry.h" />
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\render_define.h" />
     <ClInclude Include="SourceCodes\Systems\RenderSystem\render_system.h" />
     <ClInclude Include="SourceCodes\Systems\RenderSystem\render_system_directx12.h" />
-    <ClInclude Include="SourceCodes\Systems\RenderSystem\shader_define.h" />
     <ClInclude Include="SourceCodes\Systems\RenderSystem\upload_buffer.h" />
     <ClInclude Include="SourceCodes\Systems\system_setting.h" />
     <ClInclude Include="SourceCodes\Utilities\exception.h" />
