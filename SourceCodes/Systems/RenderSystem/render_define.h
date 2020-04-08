@@ -19,7 +19,7 @@ namespace KeepFortissimo
     //--------------------------------------------------------------------------------
     //  const variable / 定数 / 定量
     //--------------------------------------------------------------------------------
-    static constexpr u32 sc_num_frame_resources = 3;
+    static constexpr uint32_t sc_num_frame_resources = 3;
 
     //--------------------------------------------------------------------------------
     //  struct / 構造体 / 构造体
@@ -41,7 +41,7 @@ namespace KeepFortissimo
     struct MeshData
     {
         std::vector<Vertex3d> vertices;
-        std::vector<u32>      indeces;
+        std::vector<uint32_t> indeces;
     };
 
     // Test

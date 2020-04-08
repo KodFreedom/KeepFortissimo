@@ -46,7 +46,7 @@ namespace KeepFortissimo
 
         // 该索引指向的gpu常量缓冲区对应于当前渲染项中的物体常量缓冲区
         // Index into GPU constant buffer corresponding to the ObjectCB for this render item.
-        u32 ObjCBIndex = -1;
+        uint32_t ObjCBIndex = -1;
 
         // 此渲染项参与绘制的几何体.注意绘制一个集合体可能会用到多个渲染项
         MeshGeometry* Geo = nullptr;
@@ -222,7 +222,7 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  const variable / 定数 / 定量
         //--------------------------------------------------------------------------------
-        static constexpr u32 sc_swap_chain_buffer_count = 2;
+        static constexpr uint32_t sc_swap_chain_buffer_count = 2;
 
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
@@ -232,13 +232,13 @@ namespace KeepFortissimo
         ComPtr<ID3D12Device>   m_device = nullptr;
 
         ComPtr<ID3D12Fence> m_fence = nullptr; // cpu/gpu同步用
-        u64 m_current_fence = 0;
+        uint64_t m_current_fence = 0;
 
         ComPtr<ID3D12CommandQueue>        m_command_queue = nullptr;
         ComPtr<ID3D12CommandAllocator>    m_command_list_allocator = nullptr;
         ComPtr<ID3D12GraphicsCommandList> m_command_list = nullptr;
 
-        u32 m_current_back_buffer = 0;
+        uint32_t m_current_back_buffer = 0;
         ComPtr<ID3D12Resource> m_swap_chain_buffer[sc_swap_chain_buffer_count] = { nullptr };
         ComPtr<ID3D12Resource> m_depth_stencil_buffer = nullptr;
 
@@ -248,9 +248,9 @@ namespace KeepFortissimo
         D3D12_VIEWPORT m_screen_viewport = {};
         D3D12_RECT     m_scissor_rect = {};
 
-        u32 m_rtv_descriptor_size = 0;
-        u32 m_dsv_descriptor_size = 0;
-        u32 m_cbv_srv_uav_descriptor_size = 0;
+        uint32_t m_rtv_descriptor_size = 0;
+        uint32_t m_dsv_descriptor_size = 0;
+        uint32_t m_cbv_srv_uav_descriptor_size = 0;
 
         //D3D_DRIVER_TYPE   m_driver_type = D3D_DRIVER_TYPE_HARDWARE;
         DXGI_FORMAT       m_back_buffer_format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -258,7 +258,7 @@ namespace KeepFortissimo
         D3D_FEATURE_LEVEL m_feature_level = D3D_FEATURE_LEVEL_12_1;
 
         FrameResource* m_frame_resources[sc_num_frame_resources] = { nullptr };
-        u32            m_current_frame_resource_index = 0;
+        uint32_t       m_current_frame_resource_index = 0;
 
         // Test
         void InitTest();
@@ -279,7 +279,7 @@ namespace KeepFortissimo
         void DrawTest();
         void DrawRenderItems(const std::vector<RenderItem*>& ritems);
 
-        ComPtr<ID3D12Resource> CreateDefaultBuffer(const void* init_data, u64 byte_size, ComPtr<ID3D12Resource>& upload_buffer);
+        ComPtr<ID3D12Resource> CreateDefaultBuffer(const void* init_data, uint64_t byte_size, ComPtr<ID3D12Resource>& upload_buffer);
         ComPtr<ID3DBlob> CompileShader(const LPCWSTR filename, const D3D_SHADER_MACRO* defines, const LPCSTR entrypoint, const LPCSTR target);
         
         // 在执行绘制命令前，那些应用程序将绑定到渲染流水线上的资源，

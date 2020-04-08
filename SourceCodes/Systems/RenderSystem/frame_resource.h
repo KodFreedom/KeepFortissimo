@@ -23,7 +23,7 @@ namespace KeepFortissimo
         //  コンストラクタ
         //  构造函数
         //--------------------------------------------------------------------------------
-        FrameResource(ID3D12Device* device, u32 pass_count, u32 object_count);
+        FrameResource(ID3D12Device* device, uint32_t pass_count, uint32_t object_count);
 
         //--------------------------------------------------------------------------------
         //  destructor
@@ -39,8 +39,8 @@ namespace KeepFortissimo
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  设定与取得现在的围栏
         //--------------------------------------------------------------------------------
-        u64  CurrentFence() const { return m_current_fence; }
-        void SetCurrentFence(const u64 value) { m_current_fence = value; }
+        uint64_t  CurrentFence() const { return m_current_fence; }
+        void SetCurrentFence(const uint64_t value) { m_current_fence = value; }
 
         //--------------------------------------------------------------------------------
         //  ObjectCbuffer getter/setter
@@ -95,6 +95,6 @@ namespace KeepFortissimo
         // 通过围栏值将命令标记到此围栏点,这使我们可以检测到gpu是否还在使用这些帧资源
         // Fence value to mark commands up to this fence point.  This lets us
         // check if these frame resources are still in use by the GPU.
-        u64 m_current_fence = 0;
+        uint64_t m_current_fence = 0;
     };
 }

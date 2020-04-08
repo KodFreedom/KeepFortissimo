@@ -9,8 +9,12 @@
 //--------------------------------------------------------------------------------
 #include "main_system.h"
 #include "game_timer.h"
+#include "camera_system.h"
 #include "../Utilities/kf_labels.h"
 #include "RenderSystem/render_system.h"
+#include "../Ecs/entity_system.h"
+#include "../Ecs/entity.h"
+#include "../Ecs/Components/transform.h"
 using namespace KeepFortissimo;
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -80,7 +84,7 @@ int MainSystem::Run()
 //--------------------------------------------------------------------------------
 //  MsgProc
 //--------------------------------------------------------------------------------
-LRESULT MainSystem::MsgProc(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lparam)
+LRESULT MainSystem::MsgProc(HWND hwnd, uint32_t msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
     {
@@ -174,11 +178,25 @@ bool MainSystem::Initialize()
         return false;
     }
 
+    if (!EntitySystem::StartUp())
+    {
+        return false;
+    }
+
+    if (!CameraSystem::StartUp())
+    {
+        return false;
+    }
+
     if (!RenderSystem::StartUp(RenderApiType::kDirectX12))
     {
         return false;
     }
 
+    Entity* entity = EntitySystem::Instance().CreateEntity();
+    Entity* child_entity = EntitySystem::Instance().CreateEntity(entity);
+    Transform* test_add = child_entity->AddComponent<Transform>();
+    Transform* test_get = child_entity->GetComponent<Transform>();
     m_initialized = true;
     return true;
 }
@@ -191,6 +209,8 @@ bool MainSystem::Initialize()
 void MainSystem::Uninitialize()
 {
     RenderSystem::ShutDown();
+    CameraSystem::ShutDown();
+    EntitySystem::ShutDown();
     GameTimer::ShutDown();
 }
 
@@ -249,7 +269,7 @@ bool MainSystem::InitializeWindow()
 
     if (!RegisterClass(&window_class))
     {
-        MessageBox(0, kFailedToRegisterClass[static_cast<u32>(m_current_language)], 0, 0);
+        MessageBox(0, kFailedToRegisterClass[static_cast<uint32_t>(m_current_language)], 0, 0);
         return false;
     }
 
@@ -276,7 +296,7 @@ bool MainSystem::InitializeWindow()
 
     if (!m_main_window_handle)
     {
-        MessageBox(0, kFailedToCreateWindow[static_cast<u32>(m_current_language)], 0, 0);
+        MessageBox(0, kFailedToCreateWindow[static_cast<uint32_t>(m_current_language)], 0, 0);
         return false;
     }
 

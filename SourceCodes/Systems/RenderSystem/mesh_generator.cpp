@@ -20,7 +20,7 @@ using namespace KeepFortissimo;
 /// Creates a box centered at the origin with the given dimensions, where each
 /// face has m rows and n columns of vertices.
 ///</summary>
-MeshData MeshGenerator::CreateBox(float width, float height, float depth, u32 num_subdivisions)
+MeshData MeshGenerator::CreateBox(float width, float height, float depth, uint32_t num_subdivisions)
 {
     MeshData mesh_data;
 
@@ -76,7 +76,7 @@ MeshData MeshGenerator::CreateBox(float width, float height, float depth, u32 nu
     // Create the indices.
     //
 
-    u32 i[36];
+    uint32_t i[36];
 
     // Fill in the front face index data
     i[0] = 0; i[1] = 1; i[2] = 2;
@@ -105,9 +105,9 @@ MeshData MeshGenerator::CreateBox(float width, float height, float depth, u32 nu
     mesh_data.indeces.assign(&i[0], &i[36]);
 
     // Put a cap on the number of subdivisions.
-    num_subdivisions = std::min<u32>(num_subdivisions, 6u);
+    num_subdivisions = std::min<uint32_t>(num_subdivisions, 6u);
 
-    for (u32 i = 0; i < num_subdivisions; ++i)
+    for (uint32_t i = 0; i < num_subdivisions; ++i)
     {
         Subdivide(mesh_data);
     }
@@ -119,7 +119,7 @@ MeshData MeshGenerator::CreateBox(float width, float height, float depth, u32 nu
 /// Creates a sphere centered at the origin with the given radius.  The
 /// slices and stacks parameters control the degree of tessellation.
 ///</summary>
-MeshData MeshGenerator::CreateSphere(float radius, u32 slice_count, u32 stack_count)
+MeshData MeshGenerator::CreateSphere(float radius, uint32_t slice_count, uint32_t stack_count)
 {
     MeshData mesh_data;
 
@@ -139,12 +139,12 @@ MeshData MeshGenerator::CreateSphere(float radius, u32 slice_count, u32 stack_co
     float theta_step = 2.0f * XM_PI / slice_count;
 
     // Compute vertices for each stack ring (do not count the poles as rings).
-    for (u32 i = 1; i <= stack_count - 1; ++i)
+    for (uint32_t i = 1; i <= stack_count - 1; ++i)
     {
         float phi = i * phi_step;
 
         // vertices of ring.
-        for (u32 j = 0; j <= slice_count; ++j)
+        for (uint32_t j = 0; j <= slice_count; ++j)
         {
             float theta = j * theta_step;
 
@@ -180,7 +180,7 @@ MeshData MeshGenerator::CreateSphere(float radius, u32 slice_count, u32 stack_co
     // and connects the top pole to the first ring.
     //
 
-    for (u32 i = 1; i <= slice_count; ++i)
+    for (uint32_t i = 1; i <= slice_count; ++i)
     {
         mesh_data.indeces.push_back(0);
         mesh_data.indeces.push_back(i + 1);
@@ -193,11 +193,11 @@ MeshData MeshGenerator::CreateSphere(float radius, u32 slice_count, u32 stack_co
 
     // Offset the indices to the index of the first vertex in the first ring.
     // This is just skipping the top pole vertex.
-    u32 base_index = 1;
-    u32 ring_vertex_count = slice_count + 1;
-    for (u32 i = 0; i < stack_count - 2; ++i)
+    uint32_t base_index = 1;
+    uint32_t ring_vertex_count = slice_count + 1;
+    for (uint32_t i = 0; i < stack_count - 2; ++i)
     {
-        for (u32 j = 0; j < slice_count; ++j)
+        for (uint32_t j = 0; j < slice_count; ++j)
         {
             mesh_data.indeces.push_back(base_index + i * ring_vertex_count + j);
             mesh_data.indeces.push_back(base_index + i * ring_vertex_count + j + 1);
@@ -215,12 +215,12 @@ MeshData MeshGenerator::CreateSphere(float radius, u32 slice_count, u32 stack_co
     //
 
     // South pole vertex was added last.
-    u32 south_pole_index = static_cast<u32>(mesh_data.vertices.size() - 1);
+    uint32_t south_pole_index = static_cast<uint32_t>(mesh_data.vertices.size() - 1);
 
     // Offset the indices to the index of the first vertex in the last ring.
     base_index = south_pole_index - ring_vertex_count;
 
-    for (u32 i = 0; i < slice_count; ++i)
+    for (uint32_t i = 0; i < slice_count; ++i)
     {
         mesh_data.indeces.push_back(south_pole_index);
         mesh_data.indeces.push_back(base_index + i);
@@ -234,12 +234,12 @@ MeshData MeshGenerator::CreateSphere(float radius, u32 slice_count, u32 stack_co
 /// Creates a geosphere centered at the origin with the given radius.  The
 /// depth controls the level of tessellation.
 ///</summary>
-MeshData MeshGenerator::CreateGeosphere(float radius, u32 num_subdivisions)
+MeshData MeshGenerator::CreateGeosphere(float radius, uint32_t num_subdivisions)
 {
     MeshData mesh_data;
 
     // Put a cap on the number of subdivisions.
-    num_subdivisions = std::min<u32>(num_subdivisions, 6u);
+    num_subdivisions = std::min<uint32_t>(num_subdivisions, 6u);
 
     // Approximate a sphere by tessellating an icosahedron.
 
@@ -256,7 +256,7 @@ MeshData MeshGenerator::CreateGeosphere(float radius, u32 num_subdivisions)
         XMFLOAT3(Z, -X, 0.0f),  XMFLOAT3(-Z, -X, 0.0f)
     };
 
-    u32 k[60] =
+    uint32_t k[60] =
     {
         1,4,0,  4,9,0,  4,5,9,  8,5,4,  1,8,4,
         1,10,8, 10,3,8, 8,3,5,  3,2,5,  3,7,2,
@@ -267,18 +267,18 @@ MeshData MeshGenerator::CreateGeosphere(float radius, u32 num_subdivisions)
     mesh_data.vertices.resize(12);
     mesh_data.indeces.assign(&k[0], &k[60]);
 
-    for (u32 i = 0; i < 12; ++i)
+    for (uint32_t i = 0; i < 12; ++i)
     {
         mesh_data.vertices[i].position = pos[i];
     }
 
-    for (u32 i = 0; i < num_subdivisions; ++i)
+    for (uint32_t i = 0; i < num_subdivisions; ++i)
     {
         Subdivide(mesh_data);
     }
 
     // Project vertices onto sphere and scale.
-    for (u32 i = 0; i < mesh_data.vertices.size(); ++i)
+    for (uint32_t i = 0; i < mesh_data.vertices.size(); ++i)
     {
         // Project onto unit sphere.
         XMVECTOR n = XMVector3Normalize(XMLoadFloat3(&mesh_data.vertices[i].position));
@@ -317,7 +317,7 @@ MeshData MeshGenerator::CreateGeosphere(float radius, u32 num_subdivisions)
 /// The bottom and top radius can vary to form various cone shapes rather than true
 // cylinders.  The slices and stacks parameters control the degree of tessellation.
 ///</summary>
-MeshData MeshGenerator::CreateCylinder(float bottom_radius, float top_radius, float height, u32 slice_count, u32 stack_count)
+MeshData MeshGenerator::CreateCylinder(float bottom_radius, float top_radius, float height, uint32_t slice_count, uint32_t stack_count)
 {
     MeshData mesh_data;
 
@@ -330,17 +330,17 @@ MeshData MeshGenerator::CreateCylinder(float bottom_radius, float top_radius, fl
     // Amount to increment radius as we move up each stack level from bottom to top.
     float radiusStep = (top_radius - bottom_radius) / stack_count;
 
-    u32 ringCount = stack_count + 1;
+    uint32_t ringCount = stack_count + 1;
 
     // Compute vertices for each stack ring starting at the bottom and moving up.
-    for (u32 i = 0; i < ringCount; ++i)
+    for (uint32_t i = 0; i < ringCount; ++i)
     {
         float y = -0.5f * height + i * stackHeight;
         float r = bottom_radius + i * radiusStep;
 
         // vertices of ring
         float d_theta = 2.0f * XM_PI / slice_count;
-        for (u32 j = 0; j <= slice_count; ++j)
+        for (uint32_t j = 0; j <= slice_count; ++j)
         {
             Vertex3d vertex;
 
@@ -388,12 +388,12 @@ MeshData MeshGenerator::CreateCylinder(float bottom_radius, float top_radius, fl
 
     // Add one because we duplicate the first and last vertex per ring
     // since the texture coordinates are different.
-    u32 ringVertexCount = slice_count + 1;
+    uint32_t ringVertexCount = slice_count + 1;
 
     // Compute indices for each stack.
-    for (u32 i = 0; i < stack_count; ++i)
+    for (uint32_t i = 0; i < stack_count; ++i)
     {
-        for (u32 j = 0; j < slice_count; ++j)
+        for (uint32_t j = 0; j < slice_count; ++j)
         {
             mesh_data.indeces.push_back(i * ringVertexCount + j);
             mesh_data.indeces.push_back((i + 1) * ringVertexCount + j);
@@ -415,12 +415,12 @@ MeshData MeshGenerator::CreateCylinder(float bottom_radius, float top_radius, fl
 /// Creates an mxn grid in the xz-plane with m rows and n columns, centered
 /// at the origin with the specified width and depth.
 ///</summary>
-MeshData MeshGenerator::CreateGrid(float width, float depth, u32 m, u32 n)
+MeshData MeshGenerator::CreateGrid(float width, float depth, uint32_t m, uint32_t n)
 {
     MeshData mesh_data;
 
-    u32 vertexCount = m * n;
-    u32 faceCount = (m - 1) * (n - 1) * 2;
+    uint32_t vertexCount = m * n;
+    uint32_t faceCount = (m - 1) * (n - 1) * 2;
 
     //
     // Create the vertices.
@@ -436,10 +436,10 @@ MeshData MeshGenerator::CreateGrid(float width, float depth, u32 m, u32 n)
     float dv = 1.0f / (m - 1);
 
     mesh_data.vertices.resize(vertexCount);
-    for (u32 i = 0; i < m; ++i)
+    for (uint32_t i = 0; i < m; ++i)
     {
         float z = halfDepth - i * dz;
-        for (u32 j = 0; j < n; ++j)
+        for (uint32_t j = 0; j < n; ++j)
         {
             float x = -halfWidth + j * dx;
 
@@ -460,10 +460,10 @@ MeshData MeshGenerator::CreateGrid(float width, float depth, u32 m, u32 n)
     mesh_data.indeces.resize(faceCount * 3); // 3 indices per face
 
     // Iterate over each quad and compute indices.
-    u32 k = 0;
-    for (u32 i = 0; i < m - 1; ++i)
+    uint32_t k = 0;
+    for (uint32_t i = 0; i < m - 1; ++i)
     {
-        for (u32 j = 0; j < n - 1; ++j)
+        for (uint32_t j = 0; j < n - 1; ++j)
         {
             mesh_data.indeces[k] = i * n + j;
             mesh_data.indeces[k + 1] = i * n + j + 1;
@@ -547,8 +547,8 @@ void MeshGenerator::Subdivide(MeshData& mesh_data)
 	//  /   \ /   \
 	// *-----*-----*
     // v0    m2     v2
-    u32 num_triangles = static_cast<u32>(mesh_copy.indeces.size() / 3);
-    for (u32 i = 0; i < num_triangles; ++i)
+    uint32_t num_triangles = static_cast<uint32_t>(mesh_copy.indeces.size() / 3);
+    for (uint32_t i = 0; i < num_triangles; ++i)
     {
         Vertex3d v0 = mesh_copy.vertices[mesh_copy.indeces[i * 3 + 0]];
         Vertex3d v1 = mesh_copy.vertices[mesh_copy.indeces[i * 3 + 1]];
@@ -619,15 +619,15 @@ Vertex3d MeshGenerator::MidPoint(const Vertex3d& v0, const Vertex3d& v1)
     return v;
 }
 
-void MeshGenerator::BuildCylinderTopCap(float bottom_radius, float top_radius, float height, u32 slice_count, u32 stack_count, MeshData& mesh_data)
+void MeshGenerator::BuildCylinderTopCap(float bottom_radius, float top_radius, float height, uint32_t slice_count, uint32_t stack_count, MeshData& mesh_data)
 {
-    u32 base_index = static_cast<u32>(mesh_data.vertices.size());
+    uint32_t base_index = static_cast<uint32_t>(mesh_data.vertices.size());
 
     float y = 0.5f * height;
     float d_theta = 2.0f * XM_PI / slice_count;
 
     // Duplicate cap ring vertices because the texture coordinates and normals differ.
-    for (u32 i = 0; i <= slice_count; ++i)
+    for (uint32_t i = 0; i <= slice_count; ++i)
     {
         float x = top_radius * cosf(i * d_theta);
         float z = top_radius * sinf(i * d_theta);
@@ -652,9 +652,9 @@ void MeshGenerator::BuildCylinderTopCap(float bottom_radius, float top_radius, f
         XMFLOAT2(0.5f, 0.5f) }));
 
     // Index of center vertex.
-    u32 center_index = (u32)mesh_data.vertices.size() - 1;
+    uint32_t center_index = (uint32_t)mesh_data.vertices.size() - 1;
 
-    for (u32 i = 0; i < slice_count; ++i)
+    for (uint32_t i = 0; i < slice_count; ++i)
     {
         mesh_data.indeces.push_back(center_index);
         mesh_data.indeces.push_back(base_index + i + 1);
@@ -662,18 +662,18 @@ void MeshGenerator::BuildCylinderTopCap(float bottom_radius, float top_radius, f
     }
 }
 
-void MeshGenerator::BuildCylinderBottomCap(float bottom_radius, float top_radius, float height, u32 slice_count, u32 stack_count, MeshData& mesh_data)
+void MeshGenerator::BuildCylinderBottomCap(float bottom_radius, float top_radius, float height, uint32_t slice_count, uint32_t stack_count, MeshData& mesh_data)
 {
     // 
     // Build bottom cap.
     //
 
-    u32 base_index = static_cast<u32>(mesh_data.vertices.size());
+    uint32_t base_index = static_cast<uint32_t>(mesh_data.vertices.size());
     float y = -0.5f * height;
 
     // vertices of ring
     float d_theta = 2.0f * XM_PI / slice_count;
-    for (u32 i = 0; i <= slice_count; ++i)
+    for (uint32_t i = 0; i <= slice_count; ++i)
     {
         float x = bottom_radius * cosf(i * d_theta);
         float z = bottom_radius * sinf(i * d_theta);
@@ -698,9 +698,9 @@ void MeshGenerator::BuildCylinderBottomCap(float bottom_radius, float top_radius
          XMFLOAT2(0.5f, 0.5f) }));
 
     // Cache the index of center vertex.
-    u32 center_index = static_cast<u32>(mesh_data.vertices.size() - 1);
+    uint32_t center_index = static_cast<uint32_t>(mesh_data.vertices.size() - 1);
 
-    for (u32 i = 0; i < slice_count; ++i)
+    for (uint32_t i = 0; i < slice_count; ++i)
     {
         mesh_data.indeces.push_back(center_index);
         mesh_data.indeces.push_back(base_index + i);

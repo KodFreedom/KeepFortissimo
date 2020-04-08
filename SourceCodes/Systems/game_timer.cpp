@@ -19,7 +19,7 @@ using namespace KeepFortissimo;
 //--------------------------------------------------------------------------------
 //  SetFpsLimit
 //--------------------------------------------------------------------------------
-void GameTimer::SetFpsLimit(const u32 fps_limit)
+void GameTimer::SetFpsLimit(const uint32_t fps_limit)
 {
     m_fps_limit = fps_limit;
 

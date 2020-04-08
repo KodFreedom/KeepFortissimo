@@ -38,7 +38,7 @@ int WINAPI WinMain(HINSTANCE instance_handle, HINSTANCE previous_instance_handle
     }
     catch (Exception& exception)
     {
-        MessageBox(nullptr, exception.ToString().c_str(), kFailedToStartUpGameSystem[static_cast<u32>(Language::kEnglish)], MB_OK);
+        MessageBox(nullptr, exception.ToString().c_str(), kFailedToStartUpGameSystem[static_cast<uint32_t>(Language::kEnglish)], MB_OK);
         return 0;
     }
 }

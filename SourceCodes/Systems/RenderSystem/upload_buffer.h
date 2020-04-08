@@ -22,7 +22,7 @@ namespace KeepFortissimo
     class UploadBuffer
     {
     public:
-        UploadBuffer(ID3D12Device* device, const u32 element_count, const bool is_constant_buffer)
+        UploadBuffer(ID3D12Device* device, const uint32_t element_count, const bool is_constant_buffer)
             : m_is_constant_buffer(is_constant_buffer)
         {
             m_element_byte_size = sizeof(T);
@@ -80,7 +80,7 @@ namespace KeepFortissimo
 
         ComPtr<ID3D12Resource> m_upload_buffer = nullptr;
         BYTE*                  m_mapped_data = nullptr;
-        u32                    m_element_byte_size = 0;
+        uint32_t               m_element_byte_size = 0;
         bool                   m_is_constant_buffer = false;
     };
 }

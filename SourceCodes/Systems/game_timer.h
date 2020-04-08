@@ -80,15 +80,15 @@ namespace KeepFortissimo
 
         //--------------------------------------------------------------------------------
         //  Set the fps limit (unlimited if 0)
-        //  Arguments : fps limit(u32)
+        //  Arguments : fps limit(uint32_t)
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  fps制限の設定（0 : リミットがない）
-        //  引数 : fps limit(u32)
+        //  引数 : fps limit(uint32_t)
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  设定FPS限制（0则无限制）
-        //  参数 : fps limit(u32)
+        //  参数 : fps limit(uint32_t)
         //--------------------------------------------------------------------------------
-        void SetFpsLimit(const u32 fps_limit);
+        void SetFpsLimit(const uint32_t fps_limit);
 
         //--------------------------------------------------------------------------------
         //  Tick! Tack!
@@ -144,7 +144,7 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  const variable / 定数 / 定量
         //--------------------------------------------------------------------------------
-        static constexpr u32 sc_default_fps_limit = 120;
+        static constexpr uint32_t sc_default_fps_limit = 120;
 
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
@@ -158,6 +158,6 @@ namespace KeepFortissimo
         float         m_scaled_delta_time = 0.0f;
         float         m_time_interval = 0.0f;
         float         m_fps = 0.0f;
-        u32           m_fps_limit = 0;
+        uint32_t      m_fps_limit = 0;
     };
 }

@@ -43,17 +43,17 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  Calculate constant buffer byte size to multiple of 256
         //  Arguments : value : byte_size
-        //  Return：u32
+        //  Return：uint32_t
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  コンスタントバッファサイズを256の倍数に変更
         //  引数 : value : byte_size
-        //  戻り値：u32
+        //  戻り値：uint32_t
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  将常量缓冲区的大小转换为256的倍数
         //  参数 : value : byte_size
-        //  返回值：u32
+        //  返回值：uint32_t
         //--------------------------------------------------------------------------------
-        inline static u32 CalculateConstantBufferByteSize(u32 byte_size)
+        inline static uint32_t CalculateConstantBufferByteSize(uint32_t byte_size)
         {
             // 常量缓冲区的大小必须是硬件最小分配空间的整数倍（通常是256b）
             // 为此要将其凑整为满足需求的最小的256的整数倍。我们现在通过输入值bytesize加上255，

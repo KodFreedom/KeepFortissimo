@@ -14,7 +14,7 @@
 
 namespace KeepFortissimo
 {
-    enum class RenderApiType : u32
+    enum class RenderApiType : uint32_t
     {
         kInvalid,
         kDirectX12,
@@ -172,7 +172,7 @@ namespace KeepFortissimo
         //  variable / 変数 / 变量
         //--------------------------------------------------------------------------------
         bool                 m_msaa_enable = false;
-        u32                  m_msaa_quality = 0;
+        uint32_t             m_msaa_quality = 0;
         DirectX::XMVECTORF32 m_background_color = DirectX::Colors::Yellow;
         RenderApiType        m_api_type = RenderApiType::kInvalid;
     };

@@ -49,15 +49,15 @@ namespace KeepFortissimo
 
         //--------------------------------------------------------------------------------
         //  Get the width of the game window
-        //  Return：u32
+        //  Return：uint32_t
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  ウインドウの幅
-        //  戻り値：u32
+        //  戻り値：uint32_t
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  主系统实行处理
-        //  返回值：u32
+        //  返回值：uint32_t
         //--------------------------------------------------------------------------------
-        u32 Width() const { return m_width; }
+        uint32_t Width() const { return m_width; }
 
         //--------------------------------------------------------------------------------
         //  Run the main system
@@ -69,7 +69,7 @@ namespace KeepFortissimo
         //  主系统实行处理
         //  返回值：实行完毕则返回message.wparam
         //--------------------------------------------------------------------------------
-        u32 Height() const { return m_height; }
+        uint32_t Height() const { return m_height; }
 
         //--------------------------------------------------------------------------------
         //  Run the main system
@@ -86,26 +86,26 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  Manage the window messages
         //  Arguments : HWND
-        //              u32
+        //              uint32_t
         //              WPARAM
         //              LPARAM
         //  Return：LRESULT
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  ウインドウメッセージ処理
         //  引数 : HWND
-        //         u32
+        //         uint32_t
         //         WPARAM
         //         LPARAM
         //  戻り値：LRESULT
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  窗口消息处理
         //  参数 : HWND
-        //         u32
+        //         uint32_t
         //         WPARAM
         //         LPARAM
         //  返回值：LRESULT
         //--------------------------------------------------------------------------------
-        LRESULT MsgProc(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lparam);
+        LRESULT MsgProc(HWND hwnd, uint32_t msg, WPARAM wparam, LPARAM lparam);
 
         //--------------------------------------------------------------------------------
         //  Check that if the window is paused
@@ -230,8 +230,8 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  const variable / 定数 / 定量
         //--------------------------------------------------------------------------------
-        static constexpr u32 sc_default_width = 1280;
-        static constexpr u32 sc_default_height = 720;
+        static constexpr uint32_t sc_default_width = 1280;
+        static constexpr uint32_t sc_default_height = 720;
 
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
@@ -244,8 +244,8 @@ namespace KeepFortissimo
         bool      m_resizing = false;
         bool      m_fullscreen_state = false;
         bool      m_initialized = false;
-        u32       m_width = 0;
-        u32       m_height = 0;
+        uint32_t  m_width = 0;
+        uint32_t  m_height = 0;
         Language  m_current_language = Language::kEnglish;
     };
 }

@@ -12,7 +12,7 @@
 #include "frame_resource.h"
 using namespace KeepFortissimo;
 
-FrameResource::FrameResource(ID3D12Device* device, u32 pass_count, u32 object_count)
+FrameResource::FrameResource(ID3D12Device* device, uint32_t pass_count, uint32_t object_count)
 {
     ThrowIfFailed(device->CreateCommandAllocator(
         D3D12_COMMAND_LIST_TYPE_DIRECT,

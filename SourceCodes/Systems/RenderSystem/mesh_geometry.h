@@ -25,9 +25,9 @@ namespace KeepFortissimo
     // buffers so that we can implement the technique described by Figure 6.3.
     struct UnitMeshGeometry
     {
-        u32 index_count = 0;
-        u32 start_index_location = 0;
-        u32 base_vertex_location = 0;
+        uint32_t index_count = 0;
+        uint32_t start_index_location = 0;
+        uint32_t base_vertex_location = 0;
 
         // 通过此子网格来定义当前结构体中所存几何体的包围盒。
         // Bounding box of the geometry defined by this submesh. 
@@ -56,10 +56,10 @@ namespace KeepFortissimo
 
         // 与缓冲区相关的数据
         // Data about the buffers.
-        u32 vertex_byte_stride = 0;
-        u32 vertex_buffer_byte_size = 0;
+        uint32_t vertex_byte_stride = 0;
+        uint32_t vertex_buffer_byte_size = 0;
         DXGI_FORMAT index_format = DXGI_FORMAT_R16_UINT;
-        u32 index_buffer_byte_size = 0;
+        uint32_t index_buffer_byte_size = 0;
 
         // 一个结构体能够存储一组顶点/索引缓冲区中的多个几何体
         // 若利用下列容器来定义子网格几何体，我们就能单独地绘制出其中的子网格（单个几何体）

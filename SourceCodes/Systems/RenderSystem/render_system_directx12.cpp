@@ -48,8 +48,8 @@ void RenderSystemDirectX12::OnResize()
     assert(m_swap_chain);
     assert(m_command_list_allocator);
 
-    u32 width = MainSystem::Instance().Width();
-    u32 height = MainSystem::Instance().Height();
+    uint32_t width = MainSystem::Instance().Width();
+    uint32_t height = MainSystem::Instance().Height();
 
     // Flush before changing any resources.
     FlushCommandQueue();
@@ -164,7 +164,7 @@ bool RenderSystemDirectX12::Initialize()
 //--------------------------------------------------------------------------------
 void RenderSystemDirectX12::Uninitialize()
 {
-    for (u32 i = 0; i < sc_num_frame_resources; ++i)
+    for (uint32_t i = 0; i < sc_num_frame_resources; ++i)
     {
         SAFE_DELETE(m_frame_resources[i]);
     }
@@ -535,7 +535,7 @@ void RenderSystemDirectX12::FlushCommandQueue()
 void RenderSystemDirectX12::CreateRenderTargetView()
 {
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_heap_handle(m_rtv_heap->GetCPUDescriptorHandleForHeapStart());
-    for (u32 i = 0; i < sc_swap_chain_buffer_count; i++)
+    for (uint32_t i = 0; i < sc_swap_chain_buffer_count; i++)
     {
         // 获得存于swapchain中的buffer
         ThrowIfFailed
@@ -572,7 +572,7 @@ void RenderSystemDirectX12::CreateRenderTargetView()
 //  depth/stencil buffer and viewの作成
 //  创建深度/模板缓冲区及视图
 //--------------------------------------------------------------------------------
-void RenderSystemDirectX12::CreateDepthStencilBufferView(const u32 width, const u32 height)
+void RenderSystemDirectX12::CreateDepthStencilBufferView(const uint32_t width, const uint32_t height)
 {
     D3D12_RESOURCE_DESC depth_stencil_desc;
     depth_stencil_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // 资源的维度
@@ -643,9 +643,9 @@ void RenderSystemDirectX12::CreateDepthStencilBufferView(const u32 width, const 
 //--------------------------------------------------------------------------------
 void RenderSystemDirectX12::CreateFrameResources()
 {
-    for (u32 i = 0; i < sc_num_frame_resources; ++i)
+    for (uint32_t i = 0; i < sc_num_frame_resources; ++i)
     {
-        m_frame_resources[i] = MY_NEW FrameResource(m_device.Get(), 1, static_cast<u32>(mAllRitems.size()));
+        m_frame_resources[i] = MY_NEW FrameResource(m_device.Get(), 1, static_cast<uint32_t>(mAllRitems.size()));
     }
 }
 
@@ -944,7 +944,7 @@ void RenderSystemDirectX12::DrawTest()
 
 void RenderSystemDirectX12::DrawRenderItems(const std::vector<RenderItem*>& ritems)
 {
-    u32 objCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(ObjectConstants));
+    uint32_t objCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(ObjectConstants));
 
     auto objectCB = m_frame_resources[m_current_frame_resource_index]->ObjectCbuffer()->Resource();
 
@@ -960,7 +960,7 @@ void RenderSystemDirectX12::DrawRenderItems(const std::vector<RenderItem*>& rite
 
         // 为了绘制当前的帧资源和当前物体,偏移到描述符堆中对应的cbv处
         // Offset to the CBV in the descriptor heap for this object and for this frame resource.
-        u32 cbvIndex = m_current_frame_resource_index * (u32)mOpaqueRitems.size() + ri->ObjCBIndex;
+        uint32_t cbvIndex = m_current_frame_resource_index * (uint32_t)mOpaqueRitems.size() + ri->ObjCBIndex;
         auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
         cbvHandle.Offset(cbvIndex, m_cbv_srv_uav_descriptor_size);
 
@@ -976,13 +976,13 @@ void RenderSystemDirectX12::BuildDescriptorHeaps()
     // 如果有3个帧资源与n个渲染项,那么就应存在3n个物体常量缓冲区(object constant buffer)
     // 以及3个渲染过程常量缓冲区(pass constant buffer)
     // 因此我们也就需要创建3(n+1)个常量缓冲区视图(cbv)
-    u32 objCount = (u32)mOpaqueRitems.size();
+    uint32_t objCount = (uint32_t)mOpaqueRitems.size();
 
     // 我们需要为每个帧资源中的每一个物体都创建一个cbv描述符
     // 为了容纳每个帧资源中的渲染过程cbv而+1
     // Need a CBV descriptor for each object for each frame resource,
     // +1 for the perPass CBV for each frame resource.
-    u32 numDescriptors = (objCount + 1) * sc_num_frame_resources;
+    uint32_t numDescriptors = (objCount + 1) * sc_num_frame_resources;
 
     // 保存渲染过程cbv的起始偏移量,在本程序中,这是排在最后面的3个描述符
     // Save an offset to the start of the pass CBVs.  These are the last 3 descriptors.
@@ -999,9 +999,9 @@ void RenderSystemDirectX12::BuildDescriptorHeaps()
 
 void RenderSystemDirectX12::BuildConstantBufferViews()
 {
-    u32 objCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(ObjectConstants));
+    uint32_t objCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(ObjectConstants));
 
-    u32 objCount = (u32)mOpaqueRitems.size();
+    uint32_t objCount = (uint32_t)mOpaqueRitems.size();
 
     // 每个帧资源中的每一个物体都需要一个对应的cbv描述符
     // Need a CBV descriptor for each object for each frame resource.
@@ -1009,7 +1009,7 @@ void RenderSystemDirectX12::BuildConstantBufferViews()
     {
         auto objectCB = m_frame_resources[frameIndex]->ObjectCbuffer()->Resource();
 
-        for (u32 i = 0; i < objCount; ++i)
+        for (uint32_t i = 0; i < objCount; ++i)
         {
             // 缓冲区的起始地址（即索引为0的那个常量缓冲区的地址）
             D3D12_GPU_VIRTUAL_ADDRESS cbAddress = objectCB->GetGPUVirtualAddress();
@@ -1032,7 +1032,7 @@ void RenderSystemDirectX12::BuildConstantBufferViews()
         }
     }
 
-    u32 passCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(PassConstants));
+    uint32_t passCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(PassConstants));
 
     // 最后3个描述符依次是每个帧资源的渲染过程cbv
     // Last three descriptors are the pass CBVs for each frame resource.
@@ -1125,39 +1125,39 @@ void RenderSystemDirectX12::BuildGeometry()
 
     // 对合并顶点缓冲区中每个物体的顶点偏移量进行缓存
     // Cache the vertex offsets to each object in the concatenated vertex buffer.
-    u32 boxVertexOffset = 0;
-    u32 gridVertexOffset = (u32)box.vertices.size();
-    u32 sphereVertexOffset = gridVertexOffset + (u32)grid.vertices.size();
-    u32 cylinderVertexOffset = sphereVertexOffset + (u32)sphere.vertices.size();
+    uint32_t boxVertexOffset = 0;
+    uint32_t gridVertexOffset = (uint32_t)box.vertices.size();
+    uint32_t sphereVertexOffset = gridVertexOffset + (uint32_t)grid.vertices.size();
+    uint32_t cylinderVertexOffset = sphereVertexOffset + (uint32_t)sphere.vertices.size();
 
     // 对合并索引缓冲区中每个物体的起始索引进行缓存
     // Cache the starting index for each object in the concatenated index buffer.
-    u32 boxIndexOffset = 0;
-    u32 gridIndexOffset = (u32)box.indeces.size();
-    u32 sphereIndexOffset = gridIndexOffset + (u32)grid.indeces.size();
-    u32 cylinderIndexOffset = sphereIndexOffset + (u32)sphere.indeces.size();
+    uint32_t boxIndexOffset = 0;
+    uint32_t gridIndexOffset = (uint32_t)box.indeces.size();
+    uint32_t sphereIndexOffset = gridIndexOffset + (uint32_t)grid.indeces.size();
+    uint32_t cylinderIndexOffset = sphereIndexOffset + (uint32_t)sphere.indeces.size();
 
     // 定义的多个UnitMeshGeometry结构体中包含了顶点索引缓冲区内不同几何体的子网格数据
     // Define the UnitMeshGeometry that cover different 
     // regions of the vertex/index buffers.
 
     UnitMeshGeometry boxSubmesh;
-    boxSubmesh.index_count = (u32)box.indeces.size();
+    boxSubmesh.index_count = (uint32_t)box.indeces.size();
     boxSubmesh.start_index_location = boxIndexOffset;
     boxSubmesh.base_vertex_location = boxVertexOffset;
 
     UnitMeshGeometry gridSubmesh;
-    gridSubmesh.index_count = (u32)grid.indeces.size();
+    gridSubmesh.index_count = (uint32_t)grid.indeces.size();
     gridSubmesh.start_index_location = gridIndexOffset;
     gridSubmesh.base_vertex_location = gridVertexOffset;
 
     UnitMeshGeometry sphereSubmesh;
-    sphereSubmesh.index_count = (u32)sphere.indeces.size();
+    sphereSubmesh.index_count = (uint32_t)sphere.indeces.size();
     sphereSubmesh.start_index_location = sphereIndexOffset;
     sphereSubmesh.base_vertex_location = sphereVertexOffset;
 
     UnitMeshGeometry cylinderSubmesh;
-    cylinderSubmesh.index_count = (u32)cylinder.indeces.size();
+    cylinderSubmesh.index_count = (uint32_t)cylinder.indeces.size();
     cylinderSubmesh.start_index_location = cylinderIndexOffset;
     cylinderSubmesh.base_vertex_location = cylinderVertexOffset;
 
@@ -1175,7 +1175,7 @@ void RenderSystemDirectX12::BuildGeometry()
 
     std::vector<VertexTest> vertices(totalVertexCount);
 
-    u32 k = 0;
+    uint32_t k = 0;
     for (size_t i = 0; i < box.vertices.size(); ++i, ++k)
     {
         vertices[k].position = box.vertices[i].position;
@@ -1200,14 +1200,14 @@ void RenderSystemDirectX12::BuildGeometry()
         vertices[k].color = XMFLOAT4(DirectX::Colors::SteelBlue);
     }
 
-    std::vector<u32> indices;
+    std::vector<uint32_t> indices;
     indices.insert(indices.end(), std::begin(box.indeces), std::end(box.indeces));
     indices.insert(indices.end(), std::begin(grid.indeces), std::end(grid.indeces));
     indices.insert(indices.end(), std::begin(sphere.indeces), std::end(sphere.indeces));
     indices.insert(indices.end(), std::begin(cylinder.indeces), std::end(cylinder.indeces));
 
-    const u32 vbByteSize = (u32)vertices.size() * sizeof(VertexTest);
-    const u32 ibByteSize = (u32)indices.size() * sizeof(u32);
+    const uint32_t vbByteSize = (uint32_t)vertices.size() * sizeof(VertexTest);
+    const uint32_t ibByteSize = (uint32_t)indices.size() * sizeof(uint32_t);
 
     auto geo = new MeshGeometry();
     geo->name = "shapeGeo";
@@ -1256,7 +1256,7 @@ void RenderSystemDirectX12::BuildPSOs()
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
     ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
     psoDesc.pRootSignature = mRootSignature.Get(); // 指向一个与此pso像绑定的根签名指针。该根签名一定要于此PSO指定的着色器相兼容
-    psoDesc.InputLayout = { mInputLayout.data(), (u32)mInputLayout.size() }; // 输入布局描述
+    psoDesc.InputLayout = { mInputLayout.data(), (uint32_t)mInputLayout.size() }; // 输入布局描述
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT); // 指定用来配置光栅器的光栅化状态
     psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
     psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT); // 指定混合操作所用的混合状态
@@ -1327,7 +1327,7 @@ void RenderSystemDirectX12::BuildRenderItems()
     gridRitem->BaseVertexLocation = gridRitem->Geo->unit_mesh_geometries["grid"].base_vertex_location;
     mAllRitems.push_back(gridRitem);
 
-    u32 objCBIndex = 2;
+    uint32_t objCBIndex = 2;
     for (int i = 0; i < 5; ++i)
     {
         auto leftCylRitem = MY_NEW RenderItem();
@@ -1385,7 +1385,7 @@ void RenderSystemDirectX12::BuildRenderItems()
 }
 
 // 利用作为中介的上传缓冲区来初始化默认缓冲区
-ComPtr<ID3D12Resource> RenderSystemDirectX12::CreateDefaultBuffer(const void* init_data, u64 byte_size, ComPtr<ID3D12Resource>& upload_buffer)
+ComPtr<ID3D12Resource> RenderSystemDirectX12::CreateDefaultBuffer(const void* init_data, uint64_t byte_size, ComPtr<ID3D12Resource>& upload_buffer)
 {
     ComPtr<ID3D12Resource> default_buffer;
 
@@ -1448,7 +1448,7 @@ ComPtr<ID3D12Resource> RenderSystemDirectX12::CreateDefaultBuffer(const void* in
 
 ComPtr<ID3DBlob> RenderSystemDirectX12::CompileShader(const LPCWSTR filename, const D3D_SHADER_MACRO* defines, const LPCSTR entrypoint, const LPCSTR target)
 {
-    u32 compile_flags = 0;
+    uint32_t compile_flags = 0;
 #if defined(DEBUG) || defined(_DEBUG)  
     compile_flags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif

@@ -28,9 +28,6 @@ typedef std::wstring t_string;
 typedef std::string t_string;
 #endif // !UNICODE
 
-typedef unsigned int u32;
-typedef unsigned long long u64;
-
 #define MY_NEW new
 #define MY_DELETE delete
 
