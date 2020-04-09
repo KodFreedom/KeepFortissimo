@@ -25,17 +25,29 @@
     <Filter Include="ソース ファイル\Systems">
       <UniqueIdentifier>{df7cf32d-25bd-4e24-80c1-41c8aee05f1e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\Components">
-      <UniqueIdentifier>{9716a5da-e716-44a8-9cf9-78a8618dab15}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Components">
-      <UniqueIdentifier>{524b9db5-46da-458d-bc48-1d552249ad12}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\Libraries">
       <UniqueIdentifier>{2fd2105a-ce07-4738-a491-5eab8f545b73}</UniqueIdentifier>
     </Filter>
     <Filter Include="ヘッダー ファイル\Libraries\DirectX12">
       <UniqueIdentifier>{184f9609-55c3-4768-a3ab-1e0ec4f3227d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Systems\RenderSystem">
+      <UniqueIdentifier>{6c929b70-d31f-410d-81a3-642923d7cf41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Systems\RenderSystem">
+      <UniqueIdentifier>{8f5191af-c554-4ae6-8393-a84917191e5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Ecs">
+      <UniqueIdentifier>{8d229b18-46b4-4ff9-9de5-339e9d43b17b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Ecs\Components">
+      <UniqueIdentifier>{9716a5da-e716-44a8-9cf9-78a8618dab15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Ecs">
+      <UniqueIdentifier>{9e26aa0b-88b4-4d41-8599-b9691a654eb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Ecs\Components">
+      <UniqueIdentifier>{524b9db5-46da-458d-bc48-1d552249ad12}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -48,14 +60,32 @@
     <ClCompile Include="SourceCodes\Systems\game_timer.cpp">
       <Filter>ソース ファイル\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="SourceCodes\Systems\render_system.cpp">
-      <Filter>ソース ファイル\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="SourceCodes\Systems\render_system_directx12.cpp">
-      <Filter>ソース ファイル\Systems</Filter>
-    </ClCompile>
     <ClCompile Include="SourceCodes\Utilities\kf_utilities.cpp">
       <Filter>ソース ファイル\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Utilities\exception.cpp">
+      <Filter>ソース ファイル\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\render_system.cpp">
+      <Filter>ソース ファイル\Systems\RenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\render_system_directx12.cpp">
+      <Filter>ソース ファイル\Systems\RenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\frame_resource.cpp">
+      <Filter>ソース ファイル\Systems\RenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Systems\RenderSystem\mesh_generator.cpp">
+      <Filter>ソース ファイル\Systems\RenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Ecs\entity.cpp">
+      <Filter>ソース ファイル\Ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Ecs\Components\transform.cpp">
+      <Filter>ソース ファイル\Ecs\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Ecs\entity_system.cpp">
+      <Filter>ソース ファイル\Ecs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,14 +107,53 @@
     <ClInclude Include="SourceCodes\Systems\game_timer.h">
       <Filter>ヘッダー ファイル\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="SourceCodes\Systems\render_system.h">
-      <Filter>ヘッダー ファイル\Systems</Filter>
-    </ClInclude>
-    <ClInclude Include="SourceCodes\Systems\render_system_directx12.h">
-      <Filter>ヘッダー ファイル\Systems</Filter>
-    </ClInclude>
     <ClInclude Include="SourceCodes\Libraries\DirectX12\d3dx12.h">
       <Filter>ヘッダー ファイル\Libraries\DirectX12</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Utilities\exception.h">
+      <Filter>ヘッダー ファイル\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\render_system.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\render_system_directx12.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\upload_buffer.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\mesh_geometry.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\frame_resource.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\render_define.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\RenderSystem\mesh_generator.h">
+      <Filter>ヘッダー ファイル\Systems\RenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Systems\camera_system.h">
+      <Filter>ヘッダー ファイル\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Ecs\Components\component.h">
+      <Filter>ヘッダー ファイル\Ecs\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Ecs\entity.h">
+      <Filter>ヘッダー ファイル\Ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Ecs\Components\component_define.h">
+      <Filter>ヘッダー ファイル\Ecs\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Utilities\type_name.h">
+      <Filter>ヘッダー ファイル\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Ecs\Components\transform.h">
+      <Filter>ヘッダー ファイル\Ecs\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Ecs\entity_system.h">
+      <Filter>ヘッダー ファイル\Ecs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

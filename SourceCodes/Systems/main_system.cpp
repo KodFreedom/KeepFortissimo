@@ -9,8 +9,12 @@
 //--------------------------------------------------------------------------------
 #include "main_system.h"
 #include "game_timer.h"
+#include "camera_system.h"
 #include "../Utilities/kf_labels.h"
-#include "render_system_directx12.h"
+#include "RenderSystem/render_system.h"
+#include "../Ecs/entity_system.h"
+#include "../Ecs/entity.h"
+#include "../Ecs/Components/transform.h"
 using namespace KeepFortissimo;
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -30,9 +34,9 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 //--------------------------------------------------------------------------------
 bool MainSystem::StartUp(HINSTANCE instance_handle)
 {
-    if (instance_ != nullptr) return true;
+    if (m_instance != nullptr) return true;
     MY_NEW MainSystem(instance_handle);
-    return instance_->Initialize();
+    return m_instance->Initialize();
 }
 
 //--------------------------------------------------------------------------------
@@ -72,7 +76,7 @@ int MainSystem::Run()
     }
 
     // ウィンドウクラスの登録を解除
-    UnregisterClass(kClassName, instance_handle_);
+    UnregisterClass(kClassName, m_instance_handle);
 
     return (int)msg.wParam;
 }
@@ -80,7 +84,7 @@ int MainSystem::Run()
 //--------------------------------------------------------------------------------
 //  MsgProc
 //--------------------------------------------------------------------------------
-LRESULT MainSystem::MsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+LRESULT MainSystem::MsgProc(HWND hwnd, uint32_t msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
     {
@@ -139,19 +143,8 @@ LRESULT MainSystem::MsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 //--------------------------------------------------------------------------------
 MainSystem::MainSystem(HINSTANCE instance_handle)
     : Singleton<MainSystem>()
-    , instance_handle_(instance_handle)
-    , main_window_handle_(nullptr)
-    , paused_(false)
-    , minimized_(false)
-    , maximized_(false)
-    , resizing_(false)
-    , fullscreen_state_(false)
-    , initialized_(false)
-    , width_(kDefaultWidth)
-    , height_(kDefaultHeight)
-    , current_language_(kEnglish)
+    , m_instance_handle(instance_handle)
 {
-
 }
 
 //--------------------------------------------------------------------------------
@@ -159,7 +152,6 @@ MainSystem::MainSystem(HINSTANCE instance_handle)
 //--------------------------------------------------------------------------------
 MainSystem::~MainSystem()
 {
-
 }
 
 //--------------------------------------------------------------------------------
@@ -186,12 +178,26 @@ bool MainSystem::Initialize()
         return false;
     }
 
-    if (!RenderSystemDirectX12::StartUp())
+    if (!EntitySystem::StartUp())
     {
         return false;
     }
 
-    initialized_ = true;
+    if (!CameraSystem::StartUp())
+    {
+        return false;
+    }
+
+    if (!RenderSystem::StartUp(RenderApiType::kDirectX12))
+    {
+        return false;
+    }
+
+    Entity* entity = EntitySystem::Instance().CreateEntity();
+    Entity* child_entity = EntitySystem::Instance().CreateEntity(entity);
+    Transform* test_add = child_entity->AddComponent<Transform>();
+    Transform* test_get = child_entity->GetComponent<Transform>();
+    m_initialized = true;
     return true;
 }
 
@@ -203,6 +209,8 @@ bool MainSystem::Initialize()
 void MainSystem::Uninitialize()
 {
     RenderSystem::ShutDown();
+    CameraSystem::ShutDown();
+    EntitySystem::ShutDown();
     GameTimer::ShutDown();
 }
 
@@ -219,15 +227,15 @@ void MainSystem::GetSystemLanguage()
     {
     case 0x0411:
         // Japanese
-        current_language_ = kJapanese;
+        m_current_language = Language::kJapanese;
         break;
     case 0x0004:
         // Chinese Symple
-        current_language_ = kChinese;
+        m_current_language = Language::kChinese;
         break;
     default:
         // English
-        current_language_ = kEnglish;
+        m_current_language = Language::kEnglish;
         break;
     }
 }
@@ -244,12 +252,15 @@ void MainSystem::GetSystemLanguage()
 //--------------------------------------------------------------------------------
 bool MainSystem::InitializeWindow()
 {
+    m_width = sc_default_width;
+    m_height = sc_default_height;
+
     WNDCLASS window_class;
     window_class.style = CS_HREDRAW | CS_VREDRAW;
     window_class.lpfnWndProc = MainWndProc;
     window_class.cbClsExtra = 0;
     window_class.cbWndExtra = 0;
-    window_class.hInstance = instance_handle_;
+    window_class.hInstance = m_instance_handle;
     window_class.hIcon = LoadIcon(0, IDI_APPLICATION);
     window_class.hCursor = LoadCursor(0, IDC_ARROW);
     window_class.hbrBackground = static_cast<HBRUSH>(GetStockObject(NULL_BRUSH));
@@ -258,17 +269,17 @@ bool MainSystem::InitializeWindow()
 
     if (!RegisterClass(&window_class))
     {
-        MessageBox(0, kFailedToRegisterClass[current_language_], 0, 0);
+        MessageBox(0, kFailedToRegisterClass[static_cast<uint32_t>(m_current_language)], 0, 0);
         return false;
     }
 
     // Compute window rectangle dimensions based on requested client area dimensions.
-    RECT rect = { 0, 0, static_cast<LONG>(width_), static_cast<LONG>(height_) };
+    RECT rect = { 0, 0, static_cast<LONG>(m_width), static_cast<LONG>(m_height) };
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, false);
     int width = static_cast<int>(rect.right - rect.left);
     int height = static_cast<int>(rect.bottom - rect.top);
 
-    main_window_handle_ = CreateWindow
+    m_main_window_handle = CreateWindow
     (
         kClassName,
         kWindowName,
@@ -279,18 +290,18 @@ bool MainSystem::InitializeWindow()
         height,
         0,
         0,
-        instance_handle_,
+        m_instance_handle,
         0
     );
 
-    if (!main_window_handle_)
+    if (!m_main_window_handle)
     {
-        MessageBox(0, kFailedToCreateWindow[current_language_], 0, 0);
+        MessageBox(0, kFailedToCreateWindow[static_cast<uint32_t>(m_current_language)], 0, 0);
         return false;
     }
 
-    ShowWindow(main_window_handle_, SW_SHOW);
-    UpdateWindow(main_window_handle_);
+    ShowWindow(m_main_window_handle, SW_SHOW);
+    UpdateWindow(m_main_window_handle);
     return true;
 }
 
@@ -301,7 +312,7 @@ bool MainSystem::InitializeWindow()
 //--------------------------------------------------------------------------------
 void MainSystem::Update()
 {
-
+    UpdateWindowText();
 }
 
 //--------------------------------------------------------------------------------
@@ -323,7 +334,7 @@ void MainSystem::OnWmActivate(WPARAM wparam)
 {
     // We pause the game when the window is deactivated and unpause it 
     // when it becomes active. 
-    paused_ = LOWORD(wparam) == WA_INACTIVE;
+    m_paused = LOWORD(wparam) == WA_INACTIVE;
 }
 
 //--------------------------------------------------------------------------------
@@ -334,42 +345,42 @@ void MainSystem::OnWmActivate(WPARAM wparam)
 void MainSystem::OnWmSize(WPARAM wparam, LPARAM lparam)
 {
     // Save the new client area dimensions.
-    width_ = LOWORD(lparam);
-    height_ = HIWORD(lparam);
+    m_width = LOWORD(lparam);
+    m_height = HIWORD(lparam);
     
-    if (initialized_ == false) return;
+    if (m_initialized == false) return;
 
     if (wparam == SIZE_MINIMIZED)
     {
-        paused_ = true;
-        minimized_ = true;
-        maximized_ = false;
+        m_paused = true;
+        m_minimized = true;
+        m_maximized = false;
     }
     else if (wparam == SIZE_MAXIMIZED)
     {
-        paused_ = false;
-        minimized_ = false;
-        maximized_ = true;
+        m_paused = false;
+        m_minimized = false;
+        m_maximized = true;
         RenderSystem::Instance().OnResize();
     }
     else if (wparam == SIZE_RESTORED)
     {
         // Restoring from minimized state
-        if (minimized_)
+        if (m_minimized)
         {
-            paused_ = false;
-            minimized_ = false;
+            m_paused = false;
+            m_minimized = false;
             RenderSystem::Instance().OnResize();
         }
 
         // Restoring from maximized state
-        else if (maximized_)
+        else if (m_maximized)
         {
-            paused_ = false;
-            maximized_ = false;
+            m_paused = false;
+            m_maximized = false;
             RenderSystem::Instance().OnResize();
         }
-        else if (resizing_)
+        else if (m_resizing)
         {
             // If user is dragging the resize bars, we do not resize 
             // the buffers here because as the user continuously 
@@ -394,8 +405,8 @@ void MainSystem::OnWmSize(WPARAM wparam, LPARAM lparam)
 //--------------------------------------------------------------------------------
 void MainSystem::OnWmEnterSizeMove()
 {
-    paused_ = true;
-    resizing_ = true;
+    m_paused = true;
+    m_resizing = true;
 }
 
 //--------------------------------------------------------------------------------
@@ -406,9 +417,9 @@ void MainSystem::OnWmEnterSizeMove()
 void MainSystem::OnWmExitSizeMove()
 {
     // Here we reset everything based on the new window dimensions.
-    paused_ = false;
-    resizing_ = false;
-    if (initialized_ == false) return;
+    m_paused = false;
+    m_resizing = false;
+    if (m_initialized == false) return;
     RenderSystem::Instance().OnResize();
 }
 
@@ -427,4 +438,19 @@ void MainSystem::OnWmKeyUp(WPARAM wparam, LPARAM lparam)
     //{
     //    if (render_system_) render_system_->SetMsaaState(!render_system_->GetMsaaState());
     //}
+}
+
+//--------------------------------------------------------------------------------
+//  Update the window test
+//  window text更新
+//  更新窗口标题
+//--------------------------------------------------------------------------------
+void MainSystem::UpdateWindowText()
+{
+    // 全屏的时候不更新
+    if (m_fullscreen_state) return;
+
+    std::wstring text = kWindowName;
+    text += L" FPS : " + std::to_wstring(GameTimer::Instance().Fps());
+    SetWindowTextW(m_main_window_handle, text.c_str());
 }

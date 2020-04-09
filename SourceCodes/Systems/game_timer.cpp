@@ -19,17 +19,17 @@ using namespace KeepFortissimo;
 //--------------------------------------------------------------------------------
 //  SetFpsLimit
 //--------------------------------------------------------------------------------
-void GameTimer::SetFpsLimit(const UINT fps_limit)
+void GameTimer::SetFpsLimit(const uint32_t fps_limit)
 {
-    fps_limit_ = fps_limit;
+    m_fps_limit = fps_limit;
 
-    if (fps_limit_ == 0)
+    if (m_fps_limit == 0)
     {
-        time_interval_ = FLT_MIN;
+        m_time_interval = FLT_MIN;
     }
     else
     {
-        time_interval_ = 1.0f / static_cast<float>(fps_limit_);
+        m_time_interval = 1.0f / static_cast<float>(m_fps_limit);
     }
 }
 
@@ -38,14 +38,16 @@ void GameTimer::SetFpsLimit(const UINT fps_limit)
 //--------------------------------------------------------------------------------
 void GameTimer::Tick()
 {
-    QueryPerformanceFrequency(&frequency_);
-    QueryPerformanceCounter(&current_time_);
+    QueryPerformanceFrequency(&m_frequency);
+    QueryPerformanceCounter(&m_current_time);
 
-    delta_time_ = static_cast<float>(current_time_.QuadPart - exec_last_time_.QuadPart)
-        / static_cast<float>(frequency_.QuadPart);
+    m_delta_time = static_cast<float>(m_current_time.QuadPart - m_exec_last_time.QuadPart)
+        / static_cast<float>(m_frequency.QuadPart);
 
-    scaled_delta_time_ = delta_time_ * time_scale_
+    m_scaled_delta_time = m_delta_time * m_time_scale
         * static_cast<float>(MainSystem::Instance().Paused() ^ 1);
+
+    m_fps = m_delta_time > 0.0f ? 1.0f / m_delta_time : 0.0f;
 }
 
 //--------------------------------------------------------------------------------
@@ -57,9 +59,9 @@ bool GameTimer::CanUpdateFrame(void)
     {
         return false;
     }
-    else if (delta_time_ >= time_interval_)
+    else if (m_delta_time >= m_time_interval)
     {
-        exec_last_time_ = current_time_;
+        m_exec_last_time = m_current_time;
         return true;
     }
     return false;
@@ -75,16 +77,11 @@ bool GameTimer::CanUpdateFrame(void)
 //--------------------------------------------------------------------------------
 GameTimer::GameTimer()
     : Singleton<GameTimer>()
-    , delta_time_(0.0f)
-    , time_scale_(1.0f)
-    , scaled_delta_time_(0.0f)
-    , time_interval_(0.0f)
-    , fps_limit_(0)
 {
-    memset(&frequency_, 0x00, sizeof frequency_);
-    memset(&current_time_, 0x00, sizeof current_time_);
-    memset(&exec_last_time_, 0x00, sizeof exec_last_time_);
-    memset(&fps_last_time_, 0x00, sizeof fps_last_time_);
+    memset(&m_frequency, 0x00, sizeof m_frequency);
+    memset(&m_current_time, 0x00, sizeof m_current_time);
+    memset(&m_exec_last_time, 0x00, sizeof m_exec_last_time);
+    memset(&m_fps_last_time, 0x00, sizeof m_fps_last_time);
 }
 
 //--------------------------------------------------------------------------------
@@ -107,8 +104,9 @@ GameTimer::~GameTimer()
 //--------------------------------------------------------------------------------
 bool GameTimer::Initialize()
 {
-    QueryPerformanceCounter(&exec_last_time_);
-    fps_last_time_ = exec_last_time_;
-    SetFpsLimit(kDefaultFpsLimit);
+    m_time_scale = 1.0f;
+    QueryPerformanceCounter(&m_exec_last_time);
+    m_fps_last_time = m_exec_last_time;
+    SetFpsLimit(sc_default_fps_limit);
     return true;
 }

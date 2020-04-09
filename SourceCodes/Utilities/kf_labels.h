@@ -8,11 +8,11 @@
 //  Email  : kodfreedom@gmail.com
 //--------------------------------------------------------------------------------
 #pragma once
-#include "../Systems/system_setting.h"
+#include <stdint.h>
 
 namespace KeepFortissimo
 {
-    enum Language
+    enum class Language : uint32_t
     {
         kEnglish = 0,
         kChinese,
@@ -21,7 +21,7 @@ namespace KeepFortissimo
     };
 
 #ifdef UNICODE
-    static const wchar_t* kFailedToStartUpGameSystem[kLanguageMax] =
+    static const wchar_t* kFailedToStartUpGameSystem[static_cast<uint32_t>(Language::kLanguageMax)] =
     {
         L"Failed to start up game system",
         L"游戏系统启动失败"
@@ -32,21 +32,21 @@ namespace KeepFortissimo
 
     static const wchar_t* kWindowName = L"KeepFortissimo";
 
-    static const wchar_t* kFailedToRegisterClass[kLanguageMax] =
+    static const wchar_t* kFailedToRegisterClass[static_cast<uint32_t>(Language::kLanguageMax)] =
     {
         L"RegisterClass returned false ! \n MainSystem/InitializeWindow",
         L"RegisterClass函数返回false ! \n MainSystem/InitializeWindow"
         L"RegisterClassが失敗した ! \n MainSystem/InitializeWindow"
     };
 
-    static const wchar_t* kFailedToCreateWindow[kLanguageMax] =
+    static const wchar_t* kFailedToCreateWindow[static_cast<uint32_t>(Language::kLanguageMax)] =
     {
         L"CreateWindow returned null ! \n MainSystem/InitializeWindow",
         L"CreateWindow函数返回null ! \n MainSystem/InitializeWindow"
         L"CreateWindowが失敗した ! \n MainSystem/InitializeWindow"
     };
 #else
-    static const char* kFailedToStartUpGameSystem[kLanguageMax] =
+    static const char* kFailedToStartUpGameSystem[static_cast<uint32_t>(Language::kLanguageMax)] =
     {
         "Failed to start up game system",
         u8"游戏系统启动失败"
@@ -57,19 +57,18 @@ namespace KeepFortissimo
 
     static const char* kWindowName = "KeepFortissimo";
 
-    static const char* kFailedToRegisterClass[kLanguageMax] =
+    static const char* kFailedToRegisterClass[static_cast<uint32_t>(Language::kLanguageMax)] =
     {
         "RegisterClass returned false ! \n MainSystem/InitializeWindow",
         u8"RegisterClass函数返回false ! \n MainSystem/InitializeWindow"
         u8"RegisterClassが失敗した ! \n MainSystem/InitializeWindow"
     };
 
-    static const char* kFailedToCreateWindow[kLanguageMax] =
+    static const char* kFailedToCreateWindow[static_cast<uint32_t>(Language::kLanguageMax)] =
     {
         "CreateWindow returned null ! \n MainSystem/InitializeWindow",
         u8"CreateWindow函数返回null ! \n MainSystem/InitializeWindow"
         u8"CreateWindowが失敗した ! \n MainSystem/InitializeWindow"
     };
 #endif // !UNICODE
-
 }

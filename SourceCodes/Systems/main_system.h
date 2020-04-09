@@ -32,6 +32,7 @@ namespace KeepFortissimo
         //  参数 : HINSTANCE
         //  返回值：成功则返回true、反之返回false
         //--------------------------------------------------------------------------------
+        static bool StartUp() = delete;
         static bool StartUp(HINSTANCE instance_handle);
 
         //--------------------------------------------------------------------------------
@@ -48,15 +49,15 @@ namespace KeepFortissimo
 
         //--------------------------------------------------------------------------------
         //  Get the width of the game window
-        //  Return：UINT
+        //  Return：uint32_t
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  ウインドウの幅
-        //  戻り値：UINT
+        //  戻り値：uint32_t
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  主系统实行处理
-        //  返回值：UINT
+        //  返回值：uint32_t
         //--------------------------------------------------------------------------------
-        UINT Width() const { return width_; }
+        uint32_t Width() const { return m_width; }
 
         //--------------------------------------------------------------------------------
         //  Run the main system
@@ -68,7 +69,7 @@ namespace KeepFortissimo
         //  主系统实行处理
         //  返回值：实行完毕则返回message.wparam
         //--------------------------------------------------------------------------------
-        UINT Height() const { return height_; }
+        uint32_t Height() const { return m_height; }
 
         //--------------------------------------------------------------------------------
         //  Run the main system
@@ -80,31 +81,31 @@ namespace KeepFortissimo
         //  主系统实行处理
         //  返回值：实行完毕则返回message.wparam
         //--------------------------------------------------------------------------------
-        HWND MainWindowHandle() const { return main_window_handle_; }
+        HWND MainWindowHandle() const { return m_main_window_handle; }
 
         //--------------------------------------------------------------------------------
         //  Manage the window messages
         //  Arguments : HWND
-        //              UINT
+        //              uint32_t
         //              WPARAM
         //              LPARAM
         //  Return：LRESULT
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  ウインドウメッセージ処理
         //  引数 : HWND
-        //         UINT
+        //         uint32_t
         //         WPARAM
         //         LPARAM
         //  戻り値：LRESULT
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  窗口消息处理
         //  参数 : HWND
-        //         UINT
+        //         uint32_t
         //         WPARAM
         //         LPARAM
         //  返回值：LRESULT
         //--------------------------------------------------------------------------------
-        LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+        LRESULT MsgProc(HWND hwnd, uint32_t msg, WPARAM wparam, LPARAM lparam);
 
         //--------------------------------------------------------------------------------
         //  Check that if the window is paused
@@ -116,7 +117,7 @@ namespace KeepFortissimo
         //  返回窗口是否被暂停
         //  返回值：暂停则返回true，反之false
         //--------------------------------------------------------------------------------
-        bool Paused() const { return paused_; }
+        bool Paused() const { return m_paused; }
 
     private:
         //--------------------------------------------------------------------------------
@@ -220,24 +221,31 @@ namespace KeepFortissimo
         void OnWmKeyUp(WPARAM wparam, LPARAM lparam);
 
         //--------------------------------------------------------------------------------
+        //  Update the window test
+        //  window text更新
+        //  更新窗口标题
+        //--------------------------------------------------------------------------------
+        void UpdateWindowText();
+
+        //--------------------------------------------------------------------------------
         //  const variable / 定数 / 定量
         //--------------------------------------------------------------------------------
-        static constexpr UINT kDefaultWidth = 1280;
-        static constexpr UINT kDefaultHeight = 720;
+        static constexpr uint32_t sc_default_width = 1280;
+        static constexpr uint32_t sc_default_height = 720;
 
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
         //--------------------------------------------------------------------------------
-        HINSTANCE instance_handle_;
-        HWND      main_window_handle_;
-        bool      paused_;
-        bool      minimized_;
-        bool      maximized_;
-        bool      resizing_;
-        bool      fullscreen_state_;
-        bool      initialized_;
-        UINT      width_;
-        UINT      height_;
-        Language  current_language_;
+        HINSTANCE m_instance_handle = nullptr;
+        HWND      m_main_window_handle = nullptr;
+        bool      m_paused = false;
+        bool      m_minimized= false;
+        bool      m_maximized= false;
+        bool      m_resizing = false;
+        bool      m_fullscreen_state = false;
+        bool      m_initialized = false;
+        uint32_t  m_width = 0;
+        uint32_t  m_height = 0;
+        Language  m_current_language = Language::kEnglish;
     };
 }

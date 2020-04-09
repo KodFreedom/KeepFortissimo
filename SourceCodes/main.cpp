@@ -11,8 +11,8 @@
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #endif
-#include "Utilities\kf_utilities.h"
 #include "Utilities\kf_labels.h"
+#include "Utilities/exception.h"
 #include "Systems\main_system.h"
 using namespace KeepFortissimo;
 
@@ -38,7 +38,7 @@ int WINAPI WinMain(HINSTANCE instance_handle, HINSTANCE previous_instance_handle
     }
     catch (Exception& exception)
     {
-        MessageBox(nullptr, exception.ToString().c_str(), kFailedToStartUpGameSystem[kEnglish], MB_OK);
+        MessageBox(nullptr, exception.ToString().c_str(), kFailedToStartUpGameSystem[static_cast<uint32_t>(Language::kEnglish)], MB_OK);
         return 0;
     }
 }

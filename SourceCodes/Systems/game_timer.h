@@ -28,7 +28,7 @@ namespace KeepFortissimo
         //  两帧之间的经过时间
         //  返回值：delta time(float)
         //--------------------------------------------------------------------------------
-        float DeltaTime() const { return delta_time_; }
+        float DeltaTime() const { return m_delta_time; }
 
         //--------------------------------------------------------------------------------
         //  Get the time scale value
@@ -40,7 +40,7 @@ namespace KeepFortissimo
         //  取得时间快慢系数
         //  返回值：time scale(float)
         //--------------------------------------------------------------------------------
-        float TimeScale() const { return time_scale_; }
+        float TimeScale() const { return m_time_scale; }
 
         //--------------------------------------------------------------------------------
         //  Set the time scale value
@@ -52,7 +52,7 @@ namespace KeepFortissimo
         //  设定时间快慢系数
         //  参数 : time scale(float)
         //--------------------------------------------------------------------------------
-        void SetTimeScale(const float time_scale) { time_scale_ = time_scale; }
+        void SetTimeScale(const float time_scale) { m_time_scale = time_scale; }
 
         //--------------------------------------------------------------------------------
         //  Get the scaled delta time
@@ -64,19 +64,31 @@ namespace KeepFortissimo
         //  取得与快慢系数相乘之后的时间间隔
         //  返回值：scaled delta time(float)
         //--------------------------------------------------------------------------------
-        float ScaledDeltaTime() const { return scaled_delta_time_; }
+        float ScaledDeltaTime() const { return m_scaled_delta_time; }
+
+        //--------------------------------------------------------------------------------
+        //  Get frames per second
+        //  Return：fps(float)
+        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        //  fpsの取得
+        //  戻り値：fps(float)
+        //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        //  取得fps
+        //  返回值：fps(float)
+        //--------------------------------------------------------------------------------
+        float Fps() const { return m_fps; }
 
         //--------------------------------------------------------------------------------
         //  Set the fps limit (unlimited if 0)
-        //  Arguments : fps limit(UINT)
+        //  Arguments : fps limit(uint32_t)
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  fps制限の設定（0 : リミットがない）
-        //  引数 : fps limit(UINT)
+        //  引数 : fps limit(uint32_t)
         //ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         //  设定FPS限制（0则无限制）
-        //  参数 : fps limit(UINT)
+        //  参数 : fps limit(uint32_t)
         //--------------------------------------------------------------------------------
-        void SetFpsLimit(const UINT fps_limit);
+        void SetFpsLimit(const uint32_t fps_limit);
 
         //--------------------------------------------------------------------------------
         //  Tick! Tack!
@@ -132,19 +144,20 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  const variable / 定数 / 定量
         //--------------------------------------------------------------------------------
-        static constexpr UINT kDefaultFpsLimit = 120;
+        static constexpr uint32_t sc_default_fps_limit = 120;
 
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
         //--------------------------------------------------------------------------------
-        LARGE_INTEGER frequency_;
-        LARGE_INTEGER current_time_;
-        LARGE_INTEGER exec_last_time_;
-        LARGE_INTEGER fps_last_time_;
-        float         delta_time_;
-        float         time_scale_;
-        float         scaled_delta_time_;
-        float         time_interval_;       // 更新間隔
-        UINT          fps_limit_;
+        LARGE_INTEGER m_frequency;
+        LARGE_INTEGER m_current_time;
+        LARGE_INTEGER m_exec_last_time;
+        LARGE_INTEGER m_fps_last_time;
+        float         m_delta_time = 0.0f;
+        float         m_time_scale = 0.0f;
+        float         m_scaled_delta_time = 0.0f;
+        float         m_time_interval = 0.0f;
+        float         m_fps = 0.0f;
+        uint32_t      m_fps_limit = 0;
     };
 }

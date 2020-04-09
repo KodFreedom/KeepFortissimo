@@ -8,6 +8,7 @@
 //  Email  : kodfreedom@gmail.com
 //--------------------------------------------------------------------------------
 #include "render_system.h"
+#include "render_system_directx12.h"
 using namespace KeepFortissimo;
 
 //--------------------------------------------------------------------------------
@@ -15,21 +16,21 @@ using namespace KeepFortissimo;
 //  Public
 //
 //--------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------
-//  Render
-//--------------------------------------------------------------------------------
-void RenderSystem::Render()
+bool RenderSystem::StartUp(const RenderApiType type)
 {
-    if (PrepareRender())
-    {
-        // TODO : render components
+    if (m_instance != nullptr) return true;
 
-        EndRender();
-    }
-    else
+    switch (type)
     {
-        // TODO : clear components
+    case RenderApiType::kDirectX12:
+        MY_NEW RenderSystemDirectX12();
+        break;
+    default:
+        MY_NEW RenderSystem(RenderApiType::kInvalid);
+        break;
     }
+
+    return m_instance->Initialize();
 }
 
 //--------------------------------------------------------------------------------
@@ -37,7 +38,7 @@ void RenderSystem::Render()
 //--------------------------------------------------------------------------------
 void RenderSystem::SetMsaaEnable(bool value)
 {
-    msaa_enable_ = value;
+    m_msaa_enable = value;
 }
 
 //--------------------------------------------------------------------------------
@@ -50,10 +51,7 @@ void RenderSystem::SetMsaaEnable(bool value)
 //--------------------------------------------------------------------------------
 RenderSystem::RenderSystem(const RenderApiType type)
     : Singleton<RenderSystem>()
-    , msaa_enable_(false)
-    , msaa_quality_(0)
-    , background_color_(DirectX::Colors::Yellow)
-    , api_type_(type)
+    , m_api_type(type)
 {
 }
 

@@ -34,8 +34,8 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         static T& Instance()
         {
-            assert(instance_ != nullptr);
-            return *instance_;
+            assert(m_instance != nullptr);
+            return *m_instance;
         }
 
         //--------------------------------------------------------------------------------
@@ -53,9 +53,9 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         static bool StartUp()
         {
-            if (instance_ != nullptr) return true;
+            if (m_instance != nullptr) return true;
             MY_NEW T();
-            return instance_->Initialize();
+            return m_instance->Initialize();
         }
 
         //--------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         static void ShutDown()
         {
-            SAFE_UNINIT(instance_);
+            SAFE_UNINIT(m_instance);
         }
 
     protected:
@@ -84,8 +84,8 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         Singleton()
         {
-            assert(instance_ == nullptr);
-            instance_ = static_cast<T*>(this);
+            assert(m_instance == nullptr);
+            m_instance = static_cast<T*>(this);
         }
 
         //--------------------------------------------------------------------------------
@@ -95,7 +95,6 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         virtual ~Singleton()
         {
-
         }
 
         //--------------------------------------------------------------------------------
@@ -131,7 +130,7 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
         //--------------------------------------------------------------------------------
-        static T* instance_;
+        static T* m_instance;
 
     private:
         //--------------------------------------------------------------------------------
@@ -149,5 +148,5 @@ namespace KeepFortissimo
     //  静态成员变量的初始化
     //--------------------------------------------------------------------------------
     template<typename T>
-    T* Singleton<T>::instance_ = nullptr;
+    T* Singleton<T>::m_instance = nullptr;
 }
