@@ -223,6 +223,7 @@ namespace KeepFortissimo
         //  const variable / 定数 / 定量
         //--------------------------------------------------------------------------------
         static constexpr uint32_t sc_swap_chain_buffer_count = 2;
+        static constexpr uint32_t sc_max_frame_resource_object = 32;
 
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
@@ -273,11 +274,12 @@ namespace KeepFortissimo
 
         void UpdateTest();
         void UpdateCamera();
-        void UpdateObjectCBs();
+        void UpdateObjectConstantBuffers();
         void UpdateMainPassCB();
 
         void DrawTest();
         void DrawRenderItems(const std::vector<RenderItem*>& ritems);
+        void DrawRenderers(const std::list<Renderer*>&);
 
         ComPtr<ID3D12Resource> CreateDefaultBuffer(const void* init_data, uint64_t byte_size, ComPtr<ID3D12Resource>& upload_buffer);
         ComPtr<ID3DBlob> CompileShader(const LPCWSTR filename, const D3D_SHADER_MACRO* defines, const LPCSTR entrypoint, const LPCSTR target);
@@ -297,11 +299,11 @@ namespace KeepFortissimo
 
         ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 
-        // List of all the render items.
-        std::vector<RenderItem*> mAllRitems;
+        //// List of all the render items.
+        //std::vector<RenderItem*> mAllRitems;
 
-        // Render items divided by PSO.
-        std::vector<RenderItem*> mOpaqueRitems;
+        //// Render items divided by PSO.
+        //std::vector<RenderItem*> mOpaqueRitems;
 
         PassConstants mMainPassCB;
 

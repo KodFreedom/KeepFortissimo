@@ -15,6 +15,7 @@
 #include "../Ecs/entity_system.h"
 #include "../Ecs/entity.h"
 #include "../Ecs/Components/transform.h"
+#include "../Ecs/Components/Renderer/renderer.h"
 using namespace KeepFortissimo;
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -193,10 +194,88 @@ bool MainSystem::Initialize()
         return false;
     }
 
-    Entity* entity = EntitySystem::Instance().CreateEntity();
-    Entity* child_entity = EntitySystem::Instance().CreateEntity(entity);
-    Transform* test_add = child_entity->AddComponent<Transform>();
-    Transform* test_get = child_entity->GetComponent<Transform>();
+    {// test entity
+        Entity* box = EntitySystem::Instance().CreateEntity();
+        box->GetTransform().SetLocal(
+            { 0.0f, 0.0f, 0.0f, 0.0f }, 
+            DirectX::g_XMIdentityR3, 
+            { 1.0f, 2.0f, 1.0f, 0.0f });
+        Renderer* box_renderer = box->AddComponent<Renderer>();
+        box_renderer->SetMeshGeometryName("shapeGeo");
+        box_renderer->SetUnitMeshName("box");
+
+        Entity* sphere = EntitySystem::Instance().CreateEntity(box);
+        sphere->GetTransform().SetLocal(
+            { 0.0f, 1.0f, 0.0f, 0.0f }, 
+            DirectX::g_XMIdentityR3, 
+            { 1.0f, 1.0f, 1.0f, 0.0f });
+        Renderer* sphere_renderer = sphere->AddComponent<Renderer>();
+        sphere_renderer->SetMeshGeometryName("shapeGeo");
+        sphere_renderer->SetUnitMeshName("sphere");
+
+    //auto gridRitem = MY_NEW RenderItem();
+    //gridRitem->World = XMMatrixIdentity();
+    //gridRitem->ObjCBIndex = 1;
+    //gridRitem->Geo = mGeometries["shapeGeo"];
+    //gridRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //gridRitem->IndexCount = gridRitem->Geo->unit_mesh_geometries["grid"].index_count;
+    //gridRitem->StartIndexLocation = gridRitem->Geo->unit_mesh_geometries["grid"].start_index_location;
+    //gridRitem->BaseVertexLocation = gridRitem->Geo->unit_mesh_geometries["grid"].base_vertex_location;
+    //mAllRitems.push_back(gridRitem);
+
+    //uint32_t objCBIndex = 2;
+    //for (int i = 0; i < 5; ++i)
+    //{
+    //    auto leftCylRitem = MY_NEW RenderItem();
+    //    auto rightCylRitem = MY_NEW RenderItem();
+    //    auto leftSphereRitem = MY_NEW RenderItem();
+    //    auto rightSphereRitem = MY_NEW RenderItem();
+
+    //    XMMATRIX leftCylWorld = XMMatrixTranslation(-5.0f, 1.5f, -10.0f + i * 5.0f);
+    //    XMMATRIX rightCylWorld = XMMatrixTranslation(+5.0f, 1.5f, -10.0f + i * 5.0f);
+
+    //    XMMATRIX leftSphereWorld = XMMatrixTranslation(-5.0f, 3.5f, -10.0f + i * 5.0f);
+    //    XMMATRIX rightSphereWorld = XMMatrixTranslation(+5.0f, 3.5f, -10.0f + i * 5.0f);
+
+    //    leftCylRitem->World = rightCylWorld;
+    //    leftCylRitem->ObjCBIndex = objCBIndex++;
+    //    leftCylRitem->Geo = mGeometries["shapeGeo"];
+    //    leftCylRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //    leftCylRitem->IndexCount = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].index_count;
+    //    leftCylRitem->StartIndexLocation = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].start_index_location;
+    //    leftCylRitem->BaseVertexLocation = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].base_vertex_location;
+
+    //    rightCylRitem->World = leftCylWorld;
+    //    rightCylRitem->ObjCBIndex = objCBIndex++;
+    //    rightCylRitem->Geo = mGeometries["shapeGeo"];
+    //    rightCylRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //    rightCylRitem->IndexCount = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].index_count;
+    //    rightCylRitem->StartIndexLocation = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].start_index_location;
+    //    rightCylRitem->BaseVertexLocation = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].base_vertex_location;
+
+    //    leftSphereRitem->World = leftSphereWorld;
+    //    leftSphereRitem->ObjCBIndex = objCBIndex++;
+    //    leftSphereRitem->Geo = mGeometries["shapeGeo"];
+    //    leftSphereRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //    leftSphereRitem->IndexCount = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].index_count;
+    //    leftSphereRitem->StartIndexLocation = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].start_index_location;
+    //    leftSphereRitem->BaseVertexLocation = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].base_vertex_location;
+
+    //    rightSphereRitem->World = rightSphereWorld;
+    //    rightSphereRitem->ObjCBIndex = objCBIndex++;
+    //    rightSphereRitem->Geo = mGeometries["shapeGeo"];
+    //    rightSphereRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //    rightSphereRitem->IndexCount = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].index_count;
+    //    rightSphereRitem->StartIndexLocation = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].start_index_location;
+    //    rightSphereRitem->BaseVertexLocation = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].base_vertex_location;
+
+    //    mAllRitems.push_back(leftCylRitem);
+    //    mAllRitems.push_back(rightCylRitem);
+    //    mAllRitems.push_back(leftSphereRitem);
+    //    mAllRitems.push_back(rightSphereRitem);
+    //}
+    }
+
     m_initialized = true;
     return true;
 }
@@ -313,6 +392,9 @@ bool MainSystem::InitializeWindow()
 void MainSystem::Update()
 {
     UpdateWindowText();
+
+    // test
+    EntitySystem::Instance().PrepareRender();
 }
 
 //--------------------------------------------------------------------------------

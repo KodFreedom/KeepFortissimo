@@ -9,6 +9,9 @@
 //--------------------------------------------------------------------------------
 #include "entity_system.h"
 #include "entity.h"
+#include "Components/transform.h"
+#include "Components/Renderer/renderer.h"
+#include "../Systems/RenderSystem/render_system.h"
 using namespace KeepFortissimo;
 
 //--------------------------------------------------------------------------------
@@ -26,6 +29,26 @@ Entity* EntitySystem::CreateEntity(Entity* parent)
     entity->SetParent(parent);
     ++m_entity_id_end;
     return entity;
+}
+
+// test
+void EntitySystem::PrepareRender()
+{
+    for (auto pair : m_root_entities)
+    {
+        pair.second->GetTransform().CalculateWorld();
+    }
+
+#if _DEBUG
+    for (auto pair : m_entities)
+    {
+        Renderer* renderer = pair.second->GetComponent<Renderer>();
+        if (renderer)
+        {
+            RenderSystem::Instance().Add(renderer);
+        }
+    }
+#endif
 }
 
 //--------------------------------------------------------------------------------
@@ -74,3 +97,35 @@ void EntitySystem::RemoveRootEntity(Entity* entity)
         m_root_entities.erase(iterator);
     }
 }
+
+#if _DEBUG
+//--------------------------------------------------------------------------------
+//  エンティティ追加
+//  追加实体
+//--------------------------------------------------------------------------------
+void EntitySystem::AddEntity(Entity* entity)
+{
+    if (!entity) return;
+
+    auto iterator = m_entities.find(entity->GetId());
+    if (iterator == m_entities.end())
+    {
+        m_entities.emplace(entity->GetId(), entity);
+    }
+}
+
+//--------------------------------------------------------------------------------
+//  エンティティ削除（エンティティの中身は削除しません）
+//  移除实体
+//--------------------------------------------------------------------------------
+void EntitySystem::RemoveEntity(Entity* entity)
+{
+    if (!entity) return;
+
+    auto iterator = m_entities.find(entity->GetId());
+    if (iterator != m_entities.end())
+    {
+        m_entities.erase(iterator);
+    }
+}
+#endif

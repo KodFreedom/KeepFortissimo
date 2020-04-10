@@ -14,6 +14,11 @@
 
 namespace KeepFortissimo
 {
+    //--------------------------------------------------------------------------------
+    // 前方宣言
+    //--------------------------------------------------------------------------------
+    class Transform;
+
     class Entity
     {
         friend class EntitySystem;
@@ -53,7 +58,7 @@ namespace KeepFortissimo
             auto iterator = m_components.find(type_name);
             if (iterator != m_components.end())
             {// TODO : Assert
-                return nullptr;
+                return static_cast<T*>(iterator->second);
             }
 
             T* result = MY_NEW T(*this);
@@ -99,10 +104,13 @@ namespace KeepFortissimo
 
         //--------------------------------------------------------------------------------
         //  Getter
-        //-------------------------------------------------------------------------------
-        uint32_t GetId() const { return m_id; }
+        //--------------------------------------------------------------------------------
+        uint32_t                                     GetId() const { return m_id; }
+        Transform&                                   GetTransform() { return *m_transform; }
+        Entity*                                      GetParent() { return m_parent; }
+        const std::unordered_map<uint32_t, Entity*>& GetChildren() const { return m_children; }
 
-    private:
+    protected:
         //--------------------------------------------------------------------------------
         //  constructor
         //  コンストラクタ
@@ -130,7 +138,7 @@ namespace KeepFortissimo
         //  初期化処理
         //  初始化
         //--------------------------------------------------------------------------------
-        void Initialize() {}
+        void Initialize();
 
         //--------------------------------------------------------------------------------
         //  終了処理
@@ -141,9 +149,10 @@ namespace KeepFortissimo
         //--------------------------------------------------------------------------------
         //  variable / 変数 / 变量
         //--------------------------------------------------------------------------------
-        const uint32_t m_id;
+        const uint32_t                              m_id;
+        Transform*                                  m_transform = nullptr;;
         std::unordered_map<std::string, Component*> m_components = {};
-        Entity* m_parent = nullptr;
-        std::unordered_map<uint32_t, Entity*> m_children;
+        Entity*                                     m_parent = nullptr;
+        std::unordered_map<uint32_t, Entity*>       m_children;
     };
 }

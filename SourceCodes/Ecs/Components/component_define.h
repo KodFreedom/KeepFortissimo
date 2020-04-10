@@ -31,7 +31,7 @@ namespace KeepFortissimo
     //--------------------------------------------------------------------------------
     class Component;
     class Transform;
-
+    class Renderer;
     // component generatorを作る
     // function<void*()>[kMax] ConstructMap;
     // ConstructMap[kTransform] = []() { return new Transform(); };
@@ -42,3 +42,4 @@ namespace KeepFortissimo
 //--------------------------------------------------------------------------------
 ENABLE_TYPENAME(Component);
 ENABLE_TYPENAME(Transform);
+ENABLE_TYPENAME(Renderer);

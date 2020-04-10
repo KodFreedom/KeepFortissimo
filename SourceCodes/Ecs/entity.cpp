@@ -10,6 +10,7 @@
 #include "../Systems/system_setting.h"
 #include "entity.h"
 #include "entity_system.h"
+#include "Components/transform.h"
 using namespace KeepFortissimo;
 
 //--------------------------------------------------------------------------------
@@ -90,11 +91,28 @@ Entity::~Entity()
 }
 
 //--------------------------------------------------------------------------------
+//  初期化処理
+//  初始化
+//--------------------------------------------------------------------------------
+void Entity::Initialize()
+{
+#if _DEBUG
+    EntitySystem::Instance().AddEntity(this);
+#endif
+
+    m_transform = AddComponent<Transform>();
+}
+
+//--------------------------------------------------------------------------------
 //  終了処理
 //  终止
 //--------------------------------------------------------------------------------
 void Entity::Uninitialize()
 {
+#if _DEBUG
+    EntitySystem::Instance().RemoveEntity(this);
+#endif
+
     for (auto pair : m_children)
     {
         SAFE_UNINIT(pair.second);

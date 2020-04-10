@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SourceCodes\Ecs\Components\Renderer\renderer.cpp" />
     <ClCompile Include="SourceCodes\Ecs\Components\transform.cpp" />
     <ClCompile Include="SourceCodes\Ecs\entity.cpp" />
     <ClCompile Include="SourceCodes\Ecs\entity_system.cpp" />
@@ -35,6 +36,7 @@
   <ItemGroup>
     <ClInclude Include="SourceCodes\Ecs\Components\component.h" />
     <ClInclude Include="SourceCodes\Ecs\Components\component_define.h" />
+    <ClInclude Include="SourceCodes\Ecs\Components\Renderer\renderer.h" />
     <ClInclude Include="SourceCodes\Ecs\Components\transform.h" />
     <ClInclude Include="SourceCodes\Ecs\entity.h" />
     <ClInclude Include="SourceCodes\Ecs\entity_system.h" />

@@ -49,6 +49,15 @@
     <Filter Include="ソース ファイル\Ecs\Components">
       <UniqueIdentifier>{524b9db5-46da-458d-bc48-1d552249ad12}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Systems\JobSystem">
+      <UniqueIdentifier>{f53bf97d-aaf1-452f-a3e4-f1332757d64b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Ecs\Components\Renderer">
+      <UniqueIdentifier>{f6ad4110-8f42-4d60-bc6c-642ab0294d93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Ecs\Components\Renderer">
+      <UniqueIdentifier>{6a04a1c0-0795-4f9d-9b37-78069fba8653}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SourceCodes\main.cpp">
@@ -86,6 +95,9 @@
     </ClCompile>
     <ClCompile Include="SourceCodes\Ecs\entity_system.cpp">
       <Filter>ソース ファイル\Ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceCodes\Ecs\Components\Renderer\renderer.cpp">
+      <Filter>ソース ファイル\Ecs\Components\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +166,9 @@
     </ClInclude>
     <ClInclude Include="SourceCodes\Ecs\entity_system.h">
       <Filter>ヘッダー ファイル\Ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceCodes\Ecs\Components\Renderer\renderer.h">
+      <Filter>ヘッダー ファイル\Ecs\Components\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

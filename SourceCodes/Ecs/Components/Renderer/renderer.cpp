@@ -1,14 +1,16 @@
 //--------------------------------------------------------------------------------
-//  transform component
-//  トランスフォームコンポネント
-//  位置情报组件
+//  renderer component
+//  レンダラーコンポネント
+//  描画组件
 //
 //  Autor  : 徐 文杰(Wenjie Xu)
 //  Github : kodfreedom
 //  Email  : kodfreedom@gmail.com
 //--------------------------------------------------------------------------------
-#include "transform.h"
-#include "../entity.h"
+#include "renderer.h"
+#include "../../entity.h"
+#include "../transform.h"
+#include "../../../Systems/RenderSystem/render_define.h"
 using namespace KeepFortissimo;
 
 //--------------------------------------------------------------------------------
@@ -20,30 +22,17 @@ using namespace KeepFortissimo;
 //  コンストラクタ
 //  构造函数
 //--------------------------------------------------------------------------------
-Transform::Transform(Entity& owner)
+Renderer::Renderer(Entity& owner) 
     : Component(owner)
+    , m_render_priority(RenderPriority::kOpaque)
 {
-    
+
 }
 
 //--------------------------------------------------------------------------------
-//  calculate the world matrix
-//  ワールドマトリックスの算出
-//  计算世界矩阵
+//  getter
 //--------------------------------------------------------------------------------
-void Transform::CalculateWorld()
+const DirectX::XMMATRIX& Renderer::GetWorld()
 {
-    m_world = DirectX::XMMatrixScalingFromVector(m_scalling);
-    m_world *= DirectX::XMMatrixRotationQuaternion(m_rotation);
-    m_world *= DirectX::XMMatrixTranslationFromVector(m_position);
-
-    if (Entity* parent = GetOwner().GetParent())
-    {
-        m_world *= parent->GetTransform().GetWorld();
-    }
-
-    for (auto pair : GetOwner().GetChildren())
-    {
-        pair.second->GetTransform().CalculateWorld();
-    }
+    return GetOwner().GetTransform().GetWorld();
 }

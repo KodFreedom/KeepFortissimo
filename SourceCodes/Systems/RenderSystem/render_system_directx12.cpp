@@ -7,6 +7,8 @@
 //  Github : kodfreedom
 //  Email  : kodfreedom@gmail.com
 //--------------------------------------------------------------------------------
+#include <array>
+#include <vector>
 #include "render_system_directx12.h"
 #include "frame_resource.h"
 #include "mesh_generator.h"
@@ -15,8 +17,7 @@
 #include "../../Utilities/kf_utilities.h"
 #include "../../Utilities/exception.h"
 #include "../../Libraries/DirectX12/d3dx12.h"
-#include <array>
-#include <vector>
+#include "../../Ecs/Components/Renderer/renderer.h"
 using namespace KeepFortissimo;
 using namespace DirectX;
 using namespace std;
@@ -37,6 +38,7 @@ void RenderSystemDirectX12::Render()
     UpdateTest();
     DrawTest();
     UpdateFrameResource();
+    CleanUp();
 }
 
 //--------------------------------------------------------------------------------
@@ -645,7 +647,7 @@ void RenderSystemDirectX12::CreateFrameResources()
 {
     for (uint32_t i = 0; i < sc_num_frame_resources; ++i)
     {
-        m_frame_resources[i] = MY_NEW FrameResource(m_device.Get(), 1, static_cast<uint32_t>(mAllRitems.size()));
+        m_frame_resources[i] = MY_NEW FrameResource(m_device.Get(), 1, sc_max_frame_resource_object);
     }
 }
 
@@ -770,10 +772,10 @@ void RenderSystemDirectX12::InitTest()
 
 void RenderSystemDirectX12::UninitTest()
 {
-    for (auto item : mAllRitems)
-    {
-        SAFE_DELETE(item);
-    }
+    //for (auto item : mAllRitems)
+    //{
+    //    SAFE_DELETE(item);
+    //}
 
     for (auto geo : mGeometries)
     {
@@ -784,7 +786,7 @@ void RenderSystemDirectX12::UninitTest()
 void RenderSystemDirectX12::UpdateTest()
 {
     UpdateCamera();
-    UpdateObjectCBs();
+    UpdateObjectConstantBuffers();
     UpdateMainPassCB();
 }
 
@@ -812,26 +814,44 @@ void RenderSystemDirectX12::UpdateCamera()
     mProj = XMMatrixPerspectiveFovLH(0.25f * XM_PI, width / height, 1.0f, 1000.0f);
 }
 
-void RenderSystemDirectX12::UpdateObjectCBs()
+void RenderSystemDirectX12::UpdateObjectConstantBuffers()
 {
-    auto currObjectCB = m_frame_resources[m_current_frame_resource_index]->ObjectCbuffer();
-    for (auto& e : mAllRitems)
+    auto current_obect_constant_buffer = m_frame_resources[m_current_frame_resource_index]->ObjectCbuffer();
+    
+    uint32_t index = 0;
+    for(std::list<Renderer*>& renderers : m_renderers)
     {
-        // 只要常量发生了改变就得更新常量缓冲区内的数据,而且要对每个帧资源都进行更新
-        // Only update the cbuffer data if the constants have changed.  
-        // This needs to be tracked per frame resource.
-        if (e->NumFramesDirty > 0)
+        for (Renderer* renderer : renderers)
         {
-            ObjectConstants objConstants;
-            objConstants.world = XMMatrixTranspose(e->World);
-
-            currObjectCB->CopyData(e->ObjCBIndex, objConstants);
-
-            // 还需要对下一个frameresource进行更新
-            // Next FrameResource need to be updated too.
-            e->NumFramesDirty--;
+            // 只要常量发生了改变就得更新常量缓冲区内的数据,而且要对每个帧资源都进行更新
+            // Only update the cbuffer data if the constants have changed.  
+            // This needs to be tracked per frame resource.
+            renderer->Set(index);
+            ObjectConstants object_constants;
+            object_constants.world = XMMatrixTranspose(renderer->GetWorld());
+            current_obect_constant_buffer->CopyData(index++, object_constants);
         }
     }
+    
+    //
+    //    for (auto& e : mAllRitems)
+    //{
+    //    // 只要常量发生了改变就得更新常量缓冲区内的数据,而且要对每个帧资源都进行更新
+    //    // Only update the cbuffer data if the constants have changed.  
+    //    // This needs to be tracked per frame resource.
+    //    if (e->NumFramesDirty > 0)
+    //    {
+    //        ObjectConstants objConstants;
+    //        objConstants.world = XMMatrixTranspose(e->World);
+
+    //        current_obect_constant_buffer->CopyData(e->ObjCBIndex, objConstants);
+
+    //        // 还需要对下一个frameresource进行更新
+    //        // Next FrameResource need to be updated too.
+    //        e->NumFramesDirty--;
+    //    }
+    //}
+    //
 }
 
 void RenderSystemDirectX12::UpdateMainPassCB()
@@ -920,7 +940,12 @@ void RenderSystemDirectX12::DrawTest()
     //
     /////////////////////////////////////////////////////////////////////////////
 
-    DrawRenderItems(mOpaqueRitems);
+    for (std::list<Renderer*>& renderers : m_renderers)
+    {
+        DrawRenderers(renderers);
+    }
+    //DrawRenderItems(mOpaqueRitems);
+    
 
     // 按照资源的用途指示资源状态的转换
     // Indicate a state transition on the resource usage.
@@ -944,10 +969,6 @@ void RenderSystemDirectX12::DrawTest()
 
 void RenderSystemDirectX12::DrawRenderItems(const std::vector<RenderItem*>& ritems)
 {
-    uint32_t objCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(ObjectConstants));
-
-    auto objectCB = m_frame_resources[m_current_frame_resource_index]->ObjectCbuffer()->Resource();
-
     // 对于每个渲染项来说
     // For each render item...
     for (size_t i = 0; i < ritems.size(); ++i)
@@ -960,13 +981,42 @@ void RenderSystemDirectX12::DrawRenderItems(const std::vector<RenderItem*>& rite
 
         // 为了绘制当前的帧资源和当前物体,偏移到描述符堆中对应的cbv处
         // Offset to the CBV in the descriptor heap for this object and for this frame resource.
-        uint32_t cbvIndex = m_current_frame_resource_index * (uint32_t)mOpaqueRitems.size() + ri->ObjCBIndex;
-        auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
-        cbvHandle.Offset(cbvIndex, m_cbv_srv_uav_descriptor_size);
+        uint32_t constant_buffer_view_index = m_current_frame_resource_index * sc_max_frame_resource_object + ri->ObjCBIndex;
+        auto constant_buffer_view_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
+        constant_buffer_view_handle.Offset(constant_buffer_view_index, m_cbv_srv_uav_descriptor_size);
 
-        m_command_list->SetGraphicsRootDescriptorTable(0, cbvHandle);
+        m_command_list->SetGraphicsRootDescriptorTable(0, constant_buffer_view_handle);
 
         m_command_list->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
+    }
+}
+
+void RenderSystemDirectX12::DrawRenderers(const std::list<Renderer*>& renderers)
+{
+    // 对于每个渲染项来说
+    // For each render item...
+    for (Renderer* renderer : renderers)
+    {
+        MeshGeometry* geometry = mGeometries[renderer->GetMeshGeometryName()];
+        UnitMeshGeometry& mesh = geometry->unit_mesh_geometries[renderer->GetUnitMeshName()];
+
+        m_command_list->IASetVertexBuffers(0, 1, &geometry->VertexBufferView());
+        m_command_list->IASetIndexBuffer(&geometry->IndexBufferView());
+        m_command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        // 为了绘制当前的帧资源和当前物体,偏移到描述符堆中对应的cbv处
+        // Offset to the CBV in the descriptor heap for this object and for this frame resource.
+        uint32_t constant_buffer_view_index = m_current_frame_resource_index
+            * sc_max_frame_resource_object
+            + renderer->GetObjectConstantBufferIndex();
+
+        auto constant_buffer_view_handle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
+        constant_buffer_view_handle.Offset(constant_buffer_view_index, m_cbv_srv_uav_descriptor_size);
+
+        m_command_list->SetGraphicsRootDescriptorTable(0, constant_buffer_view_handle);
+
+        m_command_list->DrawIndexedInstanced(mesh.index_count
+            , 1, mesh.start_index_location, mesh.base_vertex_location, 0);
     }
 }
 
@@ -976,7 +1026,7 @@ void RenderSystemDirectX12::BuildDescriptorHeaps()
     // 如果有3个帧资源与n个渲染项,那么就应存在3n个物体常量缓冲区(object constant buffer)
     // 以及3个渲染过程常量缓冲区(pass constant buffer)
     // 因此我们也就需要创建3(n+1)个常量缓冲区视图(cbv)
-    uint32_t objCount = (uint32_t)mOpaqueRitems.size();
+    uint32_t objCount = sc_max_frame_resource_object;//(uint32_t)mOpaqueRitems.size();
 
     // 我们需要为每个帧资源中的每一个物体都创建一个cbv描述符
     // 为了容纳每个帧资源中的渲染过程cbv而+1
@@ -1001,7 +1051,7 @@ void RenderSystemDirectX12::BuildConstantBufferViews()
 {
     uint32_t objCBByteSize = Utility::CalculateConstantBufferByteSize(sizeof(ObjectConstants));
 
-    uint32_t objCount = (uint32_t)mOpaqueRitems.size();
+    uint32_t objCount = sc_max_frame_resource_object;//(uint32_t)mOpaqueRitems.size();
 
     // 每个帧资源中的每一个物体都需要一个对应的cbv描述符
     // Need a CBV descriptor for each object for each frame resource.
@@ -1111,7 +1161,7 @@ void RenderSystemDirectX12::BuildRootSignature()
 
 void RenderSystemDirectX12::BuildGeometry()
 {
-    MeshData box = MeshGenerator::CreateBox(1.5f, 0.5f, 1.5f, 3);
+    MeshData box = MeshGenerator::CreateBox(1.0f, 1.0f, 1.0f, 3);
     MeshData grid = MeshGenerator::CreateGrid(20.0f, 30.0f, 60, 40);
     MeshData sphere = MeshGenerator::CreateSphere(0.5f, 20, 20);
     MeshData cylinder = MeshGenerator::CreateCylinder(0.5f, 0.3f, 3.0f, 20, 20);
@@ -1307,81 +1357,81 @@ void RenderSystemDirectX12::BuildPSOs()
 
 void RenderSystemDirectX12::BuildRenderItems()
 {
-    auto boxRitem = MY_NEW RenderItem();
-    boxRitem->World = XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(0.0f, 0.5f, 0.0f);
-    boxRitem->ObjCBIndex = 0;
-    boxRitem->Geo = mGeometries["shapeGeo"];
-    boxRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-    boxRitem->IndexCount = boxRitem->Geo->unit_mesh_geometries["box"].index_count;
-    boxRitem->StartIndexLocation = boxRitem->Geo->unit_mesh_geometries["box"].start_index_location;
-    boxRitem->BaseVertexLocation = boxRitem->Geo->unit_mesh_geometries["box"].base_vertex_location;
-    mAllRitems.push_back(boxRitem);
+    //auto boxRitem = MY_NEW RenderItem();
+    //boxRitem->World = XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(0.0f, 0.5f, 0.0f);
+    //boxRitem->ObjCBIndex = 0;
+    //boxRitem->Geo = mGeometries["shapeGeo"];
+    //boxRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //boxRitem->IndexCount = boxRitem->Geo->unit_mesh_geometries["box"].index_count;
+    //boxRitem->StartIndexLocation = boxRitem->Geo->unit_mesh_geometries["box"].start_index_location;
+    //boxRitem->BaseVertexLocation = boxRitem->Geo->unit_mesh_geometries["box"].base_vertex_location;
+    //mAllRitems.push_back(boxRitem);
 
-    auto gridRitem = MY_NEW RenderItem();
-    gridRitem->World = XMMatrixIdentity();
-    gridRitem->ObjCBIndex = 1;
-    gridRitem->Geo = mGeometries["shapeGeo"];
-    gridRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-    gridRitem->IndexCount = gridRitem->Geo->unit_mesh_geometries["grid"].index_count;
-    gridRitem->StartIndexLocation = gridRitem->Geo->unit_mesh_geometries["grid"].start_index_location;
-    gridRitem->BaseVertexLocation = gridRitem->Geo->unit_mesh_geometries["grid"].base_vertex_location;
-    mAllRitems.push_back(gridRitem);
+    //auto gridRitem = MY_NEW RenderItem();
+    //gridRitem->World = XMMatrixIdentity();
+    //gridRitem->ObjCBIndex = 1;
+    //gridRitem->Geo = mGeometries["shapeGeo"];
+    //gridRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //gridRitem->IndexCount = gridRitem->Geo->unit_mesh_geometries["grid"].index_count;
+    //gridRitem->StartIndexLocation = gridRitem->Geo->unit_mesh_geometries["grid"].start_index_location;
+    //gridRitem->BaseVertexLocation = gridRitem->Geo->unit_mesh_geometries["grid"].base_vertex_location;
+    //mAllRitems.push_back(gridRitem);
 
-    uint32_t objCBIndex = 2;
-    for (int i = 0; i < 5; ++i)
-    {
-        auto leftCylRitem = MY_NEW RenderItem();
-        auto rightCylRitem = MY_NEW RenderItem();
-        auto leftSphereRitem = MY_NEW RenderItem();
-        auto rightSphereRitem = MY_NEW RenderItem();
+    //uint32_t objCBIndex = 2;
+    //for (int i = 0; i < 5; ++i)
+    //{
+    //    auto leftCylRitem = MY_NEW RenderItem();
+    //    auto rightCylRitem = MY_NEW RenderItem();
+    //    auto leftSphereRitem = MY_NEW RenderItem();
+    //    auto rightSphereRitem = MY_NEW RenderItem();
 
-        XMMATRIX leftCylWorld = XMMatrixTranslation(-5.0f, 1.5f, -10.0f + i * 5.0f);
-        XMMATRIX rightCylWorld = XMMatrixTranslation(+5.0f, 1.5f, -10.0f + i * 5.0f);
+    //    XMMATRIX leftCylWorld = XMMatrixTranslation(-5.0f, 1.5f, -10.0f + i * 5.0f);
+    //    XMMATRIX rightCylWorld = XMMatrixTranslation(+5.0f, 1.5f, -10.0f + i * 5.0f);
 
-        XMMATRIX leftSphereWorld = XMMatrixTranslation(-5.0f, 3.5f, -10.0f + i * 5.0f);
-        XMMATRIX rightSphereWorld = XMMatrixTranslation(+5.0f, 3.5f, -10.0f + i * 5.0f);
+    //    XMMATRIX leftSphereWorld = XMMatrixTranslation(-5.0f, 3.5f, -10.0f + i * 5.0f);
+    //    XMMATRIX rightSphereWorld = XMMatrixTranslation(+5.0f, 3.5f, -10.0f + i * 5.0f);
 
-        leftCylRitem->World = rightCylWorld;
-        leftCylRitem->ObjCBIndex = objCBIndex++;
-        leftCylRitem->Geo = mGeometries["shapeGeo"];
-        leftCylRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        leftCylRitem->IndexCount = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].index_count;
-        leftCylRitem->StartIndexLocation = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].start_index_location;
-        leftCylRitem->BaseVertexLocation = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].base_vertex_location;
+    //    leftCylRitem->World = rightCylWorld;
+    //    leftCylRitem->ObjCBIndex = objCBIndex++;
+    //    leftCylRitem->Geo = mGeometries["shapeGeo"];
+    //    leftCylRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //    leftCylRitem->IndexCount = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].index_count;
+    //    leftCylRitem->StartIndexLocation = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].start_index_location;
+    //    leftCylRitem->BaseVertexLocation = leftCylRitem->Geo->unit_mesh_geometries["cylinder"].base_vertex_location;
 
-        rightCylRitem->World = leftCylWorld;
-        rightCylRitem->ObjCBIndex = objCBIndex++;
-        rightCylRitem->Geo = mGeometries["shapeGeo"];
-        rightCylRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        rightCylRitem->IndexCount = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].index_count;
-        rightCylRitem->StartIndexLocation = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].start_index_location;
-        rightCylRitem->BaseVertexLocation = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].base_vertex_location;
+    //    rightCylRitem->World = leftCylWorld;
+    //    rightCylRitem->ObjCBIndex = objCBIndex++;
+    //    rightCylRitem->Geo = mGeometries["shapeGeo"];
+    //    rightCylRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //    rightCylRitem->IndexCount = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].index_count;
+    //    rightCylRitem->StartIndexLocation = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].start_index_location;
+    //    rightCylRitem->BaseVertexLocation = rightCylRitem->Geo->unit_mesh_geometries["cylinder"].base_vertex_location;
 
-        leftSphereRitem->World = leftSphereWorld;
-        leftSphereRitem->ObjCBIndex = objCBIndex++;
-        leftSphereRitem->Geo = mGeometries["shapeGeo"];
-        leftSphereRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        leftSphereRitem->IndexCount = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].index_count;
-        leftSphereRitem->StartIndexLocation = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].start_index_location;
-        leftSphereRitem->BaseVertexLocation = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].base_vertex_location;
+    //    leftSphereRitem->World = leftSphereWorld;
+    //    leftSphereRitem->ObjCBIndex = objCBIndex++;
+    //    leftSphereRitem->Geo = mGeometries["shapeGeo"];
+    //    leftSphereRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //    leftSphereRitem->IndexCount = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].index_count;
+    //    leftSphereRitem->StartIndexLocation = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].start_index_location;
+    //    leftSphereRitem->BaseVertexLocation = leftSphereRitem->Geo->unit_mesh_geometries["sphere"].base_vertex_location;
 
-        rightSphereRitem->World = rightSphereWorld;
-        rightSphereRitem->ObjCBIndex = objCBIndex++;
-        rightSphereRitem->Geo = mGeometries["shapeGeo"];
-        rightSphereRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        rightSphereRitem->IndexCount = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].index_count;
-        rightSphereRitem->StartIndexLocation = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].start_index_location;
-        rightSphereRitem->BaseVertexLocation = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].base_vertex_location;
+    //    rightSphereRitem->World = rightSphereWorld;
+    //    rightSphereRitem->ObjCBIndex = objCBIndex++;
+    //    rightSphereRitem->Geo = mGeometries["shapeGeo"];
+    //    rightSphereRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    //    rightSphereRitem->IndexCount = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].index_count;
+    //    rightSphereRitem->StartIndexLocation = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].start_index_location;
+    //    rightSphereRitem->BaseVertexLocation = rightSphereRitem->Geo->unit_mesh_geometries["sphere"].base_vertex_location;
 
-        mAllRitems.push_back(leftCylRitem);
-        mAllRitems.push_back(rightCylRitem);
-        mAllRitems.push_back(leftSphereRitem);
-        mAllRitems.push_back(rightSphereRitem);
-    }
+    //    mAllRitems.push_back(leftCylRitem);
+    //    mAllRitems.push_back(rightCylRitem);
+    //    mAllRitems.push_back(leftSphereRitem);
+    //    mAllRitems.push_back(rightSphereRitem);
+    //}
 
-    // All the render items are opaque.
-    for (auto& e : mAllRitems)
-        mOpaqueRitems.push_back(e);
+    //// All the render items are opaque.
+    //for (auto& e : mAllRitems)
+    //    mOpaqueRitems.push_back(e);
 }
 
 // 利用作为中介的上传缓冲区来初始化默认缓冲区
